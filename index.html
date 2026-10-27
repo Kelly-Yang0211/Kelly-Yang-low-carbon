@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>運動中心及全民運動館低碳管理系統</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel for parsing JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-50">
+  <!-- React App 將會掛載到這裡 -->
+  <div id="root"></div>
+
+  <!-- 使用 text/babel 並指定 module 以支援 ES 模組匯入 (Firebase v11) -->
+  <script type="text/babel" data-type="module">
+    const { useState, useEffect } = React;
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, updateDoc, onSnapshot, collection, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDPP9x3aYxgBz51CRRu7AseEVBLGqztpD8",
+      authDomain: "a01-low-carbon-management.firebaseapp.com",
+      projectId: "a01-low-carbon-management",
+      storageBucket: "a01-low-carbon-management.firebasestorage.app",
+      messagingSenderId: "90010133926",
+      appId: "1:90010133926:web:784d755325c25d9af31b67",
+      measurementId: "G-KKQ7J1VRTW"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    // 在獨立環境中，若無系統注入的 __app_id，則使用預設字串以避免寫入路徑錯誤
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'standalone-1-90010133926-web';
+
+    const MOCK_FACTORS = {
+      ELECTRICITY: { factor: 0.494, unit: 'kg CO2e/kWh', name: '電力' },
+      WATER: { factor: 0.156, unit: 'kg CO2e/度', name: '自來水' },
+      NATURAL_GAS: { factor: 2.09, unit: 'kg CO2e/度', name: '天然氣' }
+    };
+
+    const IconDashboard = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>;
+    const IconEdit = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>;
+    const IconCheck = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>;
+    const IconTrending = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>;
+    const IconCrystal = () => <span className="text-xl mr-2">🔮</span>;
+    const IconReport = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>;
+    const IconSettings = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>;
+    const IconUpload = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>;
+
+    const Badge = ({ status }) => {
+      const styles = {
+        DRAFT: 'bg-slate-100 text-slate-700 border-slate-300',
+        SUBMITTED: 'bg-amber-50 text-amber-700 border-amber-200',
+        APPROVED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        REJECTED: 'bg-rose-50 text-rose-700 border-rose-200'
+      };
+      const labels = { DRAFT: '草稿', SUBMITTED: '待審核', APPROVED: '已核准', REJECTED: '被退回' };
+      return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${styles[status]}`}>{labels[status]}</span>;
+    };
+
+    const DashboardView = ({ activities }) => {
+      const approvedActivities = activities.filter(a => a.status === 'APPROVED');
+      const totalEmissions = approvedActivities.reduce((sum, a) => sum + (a.co2e || 0), 0);
+      
+      const categoryTotals = approvedActivities.reduce((acc, a) => {
+        acc[a.category] = (acc[a.category] || 0) + a.co2e;
+        return acc;
+      }, {});
+
+      const maxCategory = Math.max(...Object.values(categoryTotals), 1);
+
+      return (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+              <p className="text-slate-500 text-sm font-semibold mb-1">年度累積碳排 (已核准)</p>
+              <div className="flex items-baseline">
+                <h2 className="text-3xl font-bold text-slate-900">{(totalEmissions / 1000).toFixed(2)}</h2>
+                <span className="ml-2 text-slate-500">tCO2e</span>
+              </div>
+              <p className="text-xs text-emerald-600 mt-2 font-semibold">↑ 需核准數據後方可累計</p>
+            </div>
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+              <p className="text-slate-500 text-sm font-semibold mb-1">盤查資料筆數</p>
+              <div className="flex items-baseline">
+                <h2 className="text-3xl font-bold text-slate-900">{activities.length}</h2>
+                <span className="ml-2 text-slate-500">筆記錄</span>
+              </div>
+            </div>
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+              <p className="text-slate-500 text-sm font-semibold mb-1">待辦事項</p>
+              <h2 className="text-3xl font-bold text-amber-600">
+                {activities.filter(a => a.status === 'SUBMITTED').length} 筆
+              </h2>
+              <span className="text-sm text-slate-500">待主管審核</span>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">排放熱點分析 (範疇二主力)</h3>
+            {Object.keys(categoryTotals).length === 0 ? (
+              <div className="text-slate-400 text-sm py-4">無已核准的盤查數據，請先完成數據填報並審核。</div>
+            ) : (
+              <div className="space-y-4">
+                {Object.entries(categoryTotals).map(([cat, val]) => (
+                  <div key={cat}>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="font-semibold text-slate-700">{MOCK_FACTORS[cat]?.name || cat}</span>
+                      <span className="text-slate-500 font-mono">{(val/1000).toFixed(2)} tCO2e ({(val/totalEmissions*100).toFixed(1)}%)</span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-2.5">
+                      <div 
+                        className="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" 
+                        style={{ width: `${(val / maxCategory) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    const DataEntryView = ({ onAddActivity }) => {
+      const [entryMode, setEntryMode] = useState('manual');
+      const [formData, setFormData] = useState({ month: '2026-04', category: 'ELECTRICITY', value: '' });
+      const [isZeroConfirmed, setIsZeroConfirmed] = useState(false);
+      const [error, setError] = useState(null);
+      const [importStatus, setImportStatus] = useState(null);
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        setError(null);
+
+        if (formData.value === '' || formData.value === null) {
+          setError("數值不得為空白。若尚未抄表請暫存草稿；若確認無耗用請輸入 0。");
+          return;
+        }
+
+        const numericValue = Number(formData.value);
+        if (numericValue === 0 && !isZeroConfirmed) {
+          setError("系統偵測數值為 0。若本月確實無耗用，請勾選「確認本月無耗用」方可送審。");
+          return;
+        }
+
+        if (numericValue > 500000) {
+          setError("數值異常過高 (較同期波動 > 30%)，請重新確認小數點或退回補件。");
+          return;
+        }
+
+        const factorData = MOCK_FACTORS[formData.category];
+        const co2e = numericValue * factorData.factor;
+
+        onAddActivity({
+          id: Date.now().toString(),
+          ...formData,
+          value: numericValue,
+          co2e,
+          status: 'SUBMITTED',
+          meter: '總表'
+        });
+
+        setFormData({ ...formData, value: '' });
+        setIsZeroConfirmed(false);
+        setError(null);
+      };
+
+      const handleFileUpload = (e) => {
+        e.preventDefault();
+        setImportStatus('processing');
+        setTimeout(() => {
+          setImportStatus('error');
+        }, 1500);
+      };
+
+      return (
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-2xl">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-bold text-slate-900">活動數據填報 (US-01, US-02)</h3>
+            <div className="flex bg-slate-100 p-1 rounded-lg">
+              <button onClick={() => setEntryMode('manual')} className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors ${entryMode === 'manual' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>單筆手動</button>
+              <button onClick={() => setEntryMode('batch')} className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors ${entryMode === 'batch' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Excel 批次匯入</button>
+            </div>
+          </div>
+          
+          {entryMode === 'manual' ? (
+            <>
+              {error && (
+                <div className="bg-rose-50 border-l-4 border-rose-500 p-4 mb-4 text-rose-700 text-sm font-semibold">
+                  {error}
+                </div>
+              )}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">盤查月份</label>
+                    <input type="month" value={formData.month} onChange={e => setFormData({...formData, month: e.target.value})} className="w-full p-2 border border-slate-300 rounded focus:ring-emerald-500 focus:border-emerald-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1">能源類別</label>
+                    <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full p-2 border border-slate-300 rounded focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+                      {Object.entries(MOCK_FACTORS).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1">活動數據 (耗用量)</label>
+                  <div className="flex">
+                    <input 
+                      type="number" 
+                      value={formData.value} 
+                      onChange={e => {
+                        setFormData({...formData, value: e.target.value});
+                        if (e.target.value !== '0') setIsZeroConfirmed(false);
+                      }} 
+                      placeholder="請輸入精確數值..."
+                      className="flex-1 p-2 border border-slate-300 rounded-l focus:ring-emerald-500 focus:border-emerald-500 outline-none" 
+                    />
+                    <span className="bg-slate-100 border border-l-0 border-slate-300 px-4 py-2 rounded-r text-slate-600">
+                      {formData.category === 'ELECTRICITY' ? 'kWh' : '度'}
+                    </span>
+                  </div>
+                </div>
+
+                {formData.value === '0' && (
+                  <div className="bg-amber-50 p-3 rounded border border-amber-200">
+                    <label className="flex items-center space-x-2 text-sm text-amber-800">
+                      <input type="checkbox" checked={isZeroConfirmed} onChange={e => setIsZeroConfirmed(e.target.checked)} className="rounded text-emerald-600 focus:ring-emerald-500" />
+                      <span>確認本月確實無耗用 (如：停機、鍋爐停用)，非漏填。</span>
+                    </label>
+                  </div>
+                )}
+
+                <div className="pt-4 flex space-x-3">
+                  <button type="button" className="px-4 py-2 bg-slate-100 text-slate-700 rounded hover:bg-slate-200 font-semibold transition-colors">
+                    暫存草稿
+                  </button>
+                  <button type="submit" className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 font-semibold transition-colors">
+                    送出審查
+                  </button>
+                </div>
+              </form>
+            </>
+          ) : (
+            <div className="space-y-4">
+              <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:bg-slate-50 transition-colors">
+                <IconUpload className="mx-auto h-12 w-12 text-slate-400 mb-3" />
+                <p className="text-sm font-semibold text-slate-700 mb-1">將 Excel 檔案拖曳至此，或點擊上傳</p>
+                <p className="text-xs text-slate-500 mb-4">支援 .xlsx, .csv 格式 (上限 10MB)</p>
+                <button onClick={handleFileUpload} className="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded shadow-sm hover:bg-slate-50 font-semibold text-sm transition-colors">
+                  選擇檔案
+                </button>
+              </div>
+              
+              {importStatus === 'processing' && (
+                <div className="bg-sky-50 text-sky-700 p-4 rounded-lg text-sm flex items-center font-semibold">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  資料解析與防呆檢核中...
+                </div>
+              )}
+              
+              {importStatus === 'error' && (
+                <div className="bg-rose-50 border border-rose-200 rounded-lg p-4">
+                  <h4 className="text-rose-800 font-bold text-sm mb-2 flex items-center">
+                    <svg className="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    匯入阻擋：發現 2 筆格式異常 (FR-06 錯誤攔截)
+                  </h4>
+                  <ul className="text-sm text-rose-600 space-y-1 ml-7 list-disc">
+                    <li><span className="font-semibold">第 4 列</span>：數值欄位為空白，系統禁止預設為 0。請補齊數值或填 0 並勾選確認無耗用。</li>
+                    <li><span className="font-semibold">第 12 列</span>：找不到對應的表計關聯 (MTR_WATER_UNKNOWN)。</li>
+                  </ul>
+                  <div className="mt-4">
+                    <button onClick={() => setImportStatus(null)} className="text-sm bg-rose-100 text-rose-800 px-4 py-2 rounded hover:bg-rose-200 font-semibold transition-colors">重新上傳</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    const ReviewView = ({ activities, onUpdateStatus }) => {
+      const submitted = activities.filter(a => a.status === 'SUBMITTED').sort((a, b) => b.month.localeCompare(a.month));
+
+      return (
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-4xl">
+          <h3 className="text-lg font-bold text-slate-900 mb-6">主管審核作業 (FR-11)</h3>
+          {submitted.length === 0 ? (
+            <div className="text-center py-12 bg-slate-50 border border-slate-200 border-dashed rounded-lg text-slate-500 font-semibold">
+              目前無待審核的盤查數據，幹得好！
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {submitted.map(act => (
+                <div key={act.id} className="border border-slate-200 rounded-lg p-5 flex flex-col md:flex-row md:justify-between md:items-center bg-slate-50 hover:bg-slate-100 transition-colors">
+                  <div className="mb-4 md:mb-0">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <Badge status={act.status} />
+                      <span className="font-bold text-slate-800 font-mono">{act.month}</span>
+                      <span className="text-sm font-semibold text-slate-600">{MOCK_FACTORS[act.category]?.name || act.category}</span>
+                    </div>
+                    <div className="text-sm text-slate-600 flex flex-wrap gap-4">
+                      <span>
+                        填報數值: <span className="font-mono font-semibold text-slate-800">{act.value.toLocaleString()} {MOCK_FACTORS[act.category]?.unit.split('/')[1] || '單位'}</span>
+                      </span>
+                      <span>
+                        換算碳排: <span className="font-mono font-bold text-emerald-600">{act.co2e.toLocaleString()} kgCO2e</span>
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex space-x-3">
+                    <button onClick={() => onUpdateStatus(act.id, 'REJECTED')} className="px-4 py-2 text-sm bg-white border border-rose-200 text-rose-600 rounded shadow-sm hover:bg-rose-50 font-bold transition-colors">退回重編</button>
+                    <button onClick={() => onUpdateStatus(act.id, 'APPROVED')} className="px-4 py-2 text-sm bg-emerald-600 border border-emerald-600 text-white rounded shadow-sm hover:bg-emerald-700 font-bold transition-colors">核准並鎖定</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    const AbatementView = () => {
+      const [form, setForm] = useState({ capex: 180000, savingsKwh: 42000, energyPrice: 3.8 });
+      
+      const annualSavingsTwd = form.savingsKwh * form.energyPrice;
+      const paybackYears = form.capex / (annualSavingsTwd || 1);
+      const co2eReduction = (form.savingsKwh * MOCK_FACTORS.ELECTRICITY.factor) / 1000;
+
+      return (
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-3xl">
+          <h3 className="text-lg font-bold text-slate-900 mb-4">設備汰換 ROI 試算 (FR-14, US-04)</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">預估資本支出 (CAPEX) - TWD</label>
+                <input type="number" value={form.capex} onChange={e => setForm({...form, capex: Number(e.target.value)})} className="w-full p-2 border border-slate-300 rounded outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">預估年省電量 - kWh</label>
+                <input type="number" value={form.savingsKwh} onChange={e => setForm({...form, savingsKwh: Number(e.target.value)})} className="w-full p-2 border border-slate-300 rounded outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">目前電價單價 (TWD/度)</label>
+                <input type="number" step="0.1" value={form.energyPrice} onChange={e => setForm({...form, energyPrice: Number(e.target.value)})} className="w-full p-2 border border-slate-300 rounded outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500" />
+              </div>
+            </div>
+            
+            <div className="bg-slate-50 p-6 rounded-lg border border-slate-200 flex flex-col justify-center space-y-6">
+              <div>
+                <p className="text-slate-500 text-sm font-semibold">簡單回收年限 (Payback)</p>
+                <p className="text-3xl font-bold text-teal-600">{paybackYears.toFixed(2)} <span className="text-lg text-slate-500 font-normal">年</span></p>
+              </div>
+              <div>
+                <p className="text-slate-500 text-sm font-semibold">預估年減碳量</p>
+                <p className="text-3xl font-bold text-emerald-600">{co2eReduction.toFixed(2)} <span className="text-lg text-slate-500 font-normal">tCO2e</span></p>
+              </div>
+              <div>
+                <p className="text-slate-500 text-sm font-semibold">年省電費估算</p>
+                <p className="text-2xl font-bold text-slate-800 font-mono">${annualSavingsTwd.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const ReportView = ({ activities }) => {
+      const approved = activities.filter(a => a.status === 'APPROVED').sort((a, b) => a.month.localeCompare(b.month));
+      
+      const handleExportCSV = () => {
+        const headers = ['盤查月份,能源類別,排放源名稱,消耗數值,單位,換算碳排(kgCO2e),狀態\n'];
+        const rows = approved.map(a => 
+          `${a.month},${a.category},${MOCK_FACTORS[a.category]?.name},${a.value},${MOCK_FACTORS[a.category]?.unit.split('/')[1] || '度'},${a.co2e},${a.status}`
+        );
+        const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + headers.concat(rows).join('\n');
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "carbon_inventory_report_2026.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      return (
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-lg font-bold text-slate-900">盤查清冊與報表匯出 (FR-16)</h3>
+            <button onClick={handleExportCSV} className="flex items-center px-4 py-2 bg-emerald-600 text-white rounded shadow-sm hover:bg-emerald-700 font-semibold text-sm transition-colors">
+              <IconReport /> <span className="ml-2">匯出 CSV 盤查清冊</span>
+            </button>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                  <th className="p-4">盤查月份</th>
+                  <th className="p-4">能源類別</th>
+                  <th className="p-4 text-right">消耗數值</th>
+                  <th className="p-4">單位</th>
+                  <th className="p-4 text-right">碳排當量 (kg CO2e)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {approved.length === 0 ? (
+                  <tr><td colSpan="5" className="p-8 text-center text-slate-500 font-semibold">尚無已核准的盤查數據，請先至「數據填報」並完成「主管審查」。</td></tr>
+                ) : (
+                  approved.map(a => (
+                    <tr key={a.id} className="border-b border-slate-100 hover:bg-slate-50 text-sm">
+                      <td className="p-4 font-mono text-slate-600">{a.month}</td>
+                      <td className="p-4 font-medium text-slate-800">{MOCK_FACTORS[a.category]?.name || a.category}</td>
+                      <td className="p-4 text-right font-mono">{a.value.toLocaleString()}</td>
+                      <td className="p-4 text-slate-500">{MOCK_FACTORS[a.category]?.unit.split('/')[1] || '度'}</td>
+                      <td className="p-4 text-right font-mono text-emerald-600 font-semibold">{a.co2e.toLocaleString()}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    };
+
+    const SettingsView = ({ facilityData, setFacilityData }) => {
+      return (
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-5xl">
+          <h3 className="text-lg font-bold text-slate-900 mb-6">系統設定與係數管理 (FR-02, FR-08)</h3>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* 左側：場館基本資料 */}
+            <div>
+              <h4 className="text-sm font-bold text-slate-700 mb-4 border-b border-slate-100 pb-2">場館基本參數 (FR-02)</h4>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1 font-semibold">場館名稱</label>
+                  <input 
+                    type="text" 
+                    value={facilityData.name} 
+                    onChange={e => setFacilityData({...facilityData, name: e.target.value})}
+                    className="w-full p-2 border border-slate-300 rounded outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-bold text-slate-800 transition-colors"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1 font-semibold">場館代碼 (ID)</label>
+                    <input type="text" value={facilityData.id} disabled className="w-full p-2 border border-slate-200 bg-slate-50 rounded text-slate-500 font-mono text-sm cursor-not-allowed" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1 font-semibold">樓地板面積 (sqm)</label>
+                    <input type="text" value={facilityData.area} onChange={e => setFacilityData({...facilityData, area: e.target.value})} className="w-full p-2 border border-slate-300 rounded outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-mono text-slate-800 text-sm transition-colors" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1 font-semibold">溫水泳池加熱方式</label>
+                  <select value={facilityData.heatingMethod} onChange={e => setFacilityData({...facilityData, heatingMethod: e.target.value})} className="w-full p-2 border border-slate-300 rounded outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 text-sm">
+                    <option value="熱泵 + 燃氣鍋爐">熱泵 + 燃氣鍋爐</option>
+                    <option value="純熱泵">純熱泵</option>
+                    <option value="純燃氣鍋爐">純燃氣鍋爐</option>
+                    <option value="無溫水泳池">無溫水泳池</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* 右側：係數管理 */}
+            <div>
+              <h4 className="text-sm font-bold text-slate-700 mb-3 border-b border-slate-100 pb-2">全域排放係數庫 (2026 年度鎖定版)</h4>
+              <div className="space-y-3">
+                {Object.entries(MOCK_FACTORS).map(([key, factor]) => (
+                  <div key={key} className="bg-slate-50 p-3 rounded-lg border border-slate-200 flex justify-between items-center">
+                    <div>
+                      <p className="font-bold text-slate-800 text-sm">{factor.name}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">代碼: {key}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-base font-mono font-bold text-emerald-600">{factor.factor}</p>
+                      <p className="text-xs text-slate-500">{factor.unit}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-amber-600 mt-4 flex items-start font-semibold bg-amber-50 p-2.5 rounded border border-amber-200">
+                <svg className="w-4 h-4 mr-2 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                係數已由系統管理員 (Admin) 鎖定，確保各館盤查基準一致，防止篡改產生數據漂移。
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const LoginScreen = ({ auth }) => {
+      const [isLogin, setIsLogin] = useState(true);
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [error, setError] = useState(null);
+      const [isLoading, setIsLoading] = useState(false);
+
+      const handleEmailAuth = async (e) => {
+        e.preventDefault();
+        setError(null);
+        setIsLoading(true);
+        try {
+          if (isLogin) {
+            await signInWithEmailAndPassword(auth, email, password);
+          } else {
+            await createUserWithEmailAndPassword(auth, email, password);
+          }
+        } catch (err) {
+          if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+            setError("帳號或密碼錯誤，請重新輸入。");
+          } else if (err.code === 'auth/email-already-in-use') {
+            setError("此信箱已被註冊，請直接登入。");
+          } else if (err.code === 'auth/weak-password') {
+            setError("密碼強度不足，請至少輸入 6 個字元。");
+          } else if (err.code === 'auth/unauthorized-domain') {
+            setError(`網域未授權！請至 Firebase 控制台 > Authentication > 設定 > 授權網域，新增此網域：「${window.location.hostname}」`);
+          } else {
+            setError("發生錯誤：" + err.message);
+          }
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      const handleGoogleAuth = async () => {
+        setError(null);
+        setIsLoading(true);
+        try {
+          const provider = new GoogleAuthProvider();
+          await signInWithPopup(auth, provider);
+        } catch (err) {
+          if (err.code === 'auth/unauthorized-domain') {
+            setError(`網域未授權！請至 Firebase 控制台 > Authentication > 設定 > 授權網域，新增此網域：「${window.location.hostname}」`);
+          } else if (err.code !== 'auth/popup-closed-by-user') {
+            setError("Google 登入失敗：" + err.message);
+          }
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      return (
+        <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
+          <div className="sm:mx-auto sm:w-full sm:max-w-md">
+            <div className="flex justify-center text-emerald-600 mb-4">
+              <span className="text-5xl">🔮</span>
+            </div>
+            <h2 className="mt-2 text-center text-3xl font-bold tracking-tight text-slate-900">
+              運動中心及全民運動館
+            </h2>
+            <p className="mt-2 text-center text-lg font-bold text-emerald-600">低碳管理系統</p>
+          </div>
+
+          <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+            <div className="bg-white py-8 px-4 shadow sm:rounded-xl sm:px-10 border border-slate-200">
+              <div className="mb-6 flex space-x-4 border-b border-slate-200 pb-4">
+                <button
+                  onClick={() => { setIsLogin(true); setError(null); }}
+                  className={`flex-1 pb-2 font-bold text-sm text-center border-b-2 transition-colors ${isLogin ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                >
+                  會員登入
+                </button>
+                <button
+                  onClick={() => { setIsLogin(false); setError(null); }}
+                  className={`flex-1 pb-2 font-bold text-sm text-center border-b-2 transition-colors ${!isLogin ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                >
+                  註冊帳號
+                </button>
+              </div>
+
+              {error && (
+                <div className="mb-4 bg-rose-50 border-l-4 border-rose-500 p-3 text-sm text-rose-700 font-semibold rounded">
+                  {error}
+                </div>
+              )}
+
+              <form className="space-y-6" onSubmit={handleEmailAuth}>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700">電子信箱</label>
+                  <div className="mt-1">
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 placeholder-slate-400 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-emerald-500 sm:text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700">密碼</label>
+                  <div className="mt-1">
+                    <input
+                      type="password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 placeholder-slate-400 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-emerald-500 sm:text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="flex w-full justify-center rounded-md border border-transparent bg-emerald-600 py-2 px-4 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
+                  >
+                    {isLoading ? '處理中...' : (isLogin ? '登入系統' : '註冊帳號')}
+                  </button>
+                </div>
+              </form>
+
+              <div className="mt-6">
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-300" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="bg-white px-2 text-slate-500 font-semibold">或使用快速登入</span>
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <button
+                    onClick={handleGoogleAuth}
+                    disabled={isLoading}
+                    className="flex w-full items-center justify-center rounded-md border border-slate-300 bg-white py-2 px-4 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors"
+                  >
+                    <svg className="h-5 w-5 mr-2" aria-hidden="true" viewBox="0 0 24 24">
+                      <path d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z" fill="#EA4335" />
+                      <path d="M23.49 12.275C23.49 11.49 23.415 10.73 23.3 10H12V14.51H18.47C18.18 15.99 17.34 17.25 16.08 18.1L19.945 21.1C22.2 19.01 23.49 15.92 23.49 12.275Z" fill="#4285F4" />
+                      <path d="M5.26498 14.2949C5.02498 13.5699 4.88501 12.7999 4.88501 11.9999C4.88501 11.1999 5.01998 10.4299 5.26498 9.7049L1.275 6.60986C0.46 8.22986 0 10.0599 0 11.9999C0 13.9399 0.46 15.7699 1.28 17.3899L5.26498 14.2949Z" fill="#FBBC05" />
+                      <path d="M12.0004 24.0001C15.2404 24.0001 17.9654 22.935 19.9454 21.095L16.0804 18.095C15.0054 18.82 13.6204 19.245 12.0004 19.245C8.8704 19.245 6.21537 17.135 5.26538 14.29L1.27539 17.385C3.25539 21.31 7.3104 24.0001 12.0004 24.0001Z" fill="#34A853" />
+                    </svg>
+                    Google 帳號登入
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    function CarbonApp() {
+      const [activeTab, setActiveTab] = useState('dashboard');
+      const [role, setRole] = useState('Operator'); 
+      const [activities, setActivities] = useState([]);
+      const [user, setUser] = useState(null);
+      const [authInitialized, setAuthInitialized] = useState(false);
+      const [facilityData, setFacilityData] = useState({
+        id: 'FAC_TPE_001',
+        name: '信義全民運動中心',
+        area: '8,250.45',
+        heatingMethod: '熱泵 + 燃氣鍋爐'
+      });
+
+      useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+          setUser(currentUser);
+          setAuthInitialized(true);
+        });
+        return () => unsubscribe();
+      }, []);
+
+      const handleLogout = async () => {
+        try {
+          await signOut(auth);
+        } catch (e) {
+          console.error("Logout error:", e);
+        }
+      };
+
+      useEffect(() => {
+        if (!user) return;
+        const q = query(collection(db, 'artifacts', appId, 'users', user.uid, 'activities'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          setActivities(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+        }, (err) => {
+          console.error("Firestore error:", err);
+        });
+        return () => unsubscribe();
+      }, [user]);
+
+      const handleAddActivity = async (act) => {
+        if (!user) return;
+        try {
+          const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'activities', act.id);
+          await setDoc(docRef, act);
+        } catch (e) {
+          console.error("Error adding doc:", e);
+        }
+      };
+
+      const handleUpdateStatus = async (id, newStatus) => {
+        if (!user) return;
+        try {
+          const docRef = doc(db, 'artifacts', appId, 'users', user.uid, 'activities', id);
+          await updateDoc(docRef, { status: newStatus });
+        } catch (e) {
+          console.error("Error updating doc:", e);
+        }
+      };
+
+      if (!authInitialized) {
+        return <div className="flex h-screen bg-slate-50 items-center justify-center font-bold text-slate-500">系統載入中...</div>;
+      }
+
+      if (!user) {
+        return <LoginScreen auth={auth} />;
+      }
+
+      return (
+        <div className="flex h-screen bg-slate-50 font-sans">
+          <div className="w-64 bg-slate-900 text-slate-300 flex flex-col">
+            <div className="h-16 flex items-center px-4 border-b border-slate-800 bg-slate-950">
+              <IconCrystal />
+              <span className="font-bold text-white tracking-wide text-sm leading-tight ml-1">運動中心及全民運動館<br/>低碳管理系統</span>
+            </div>
+            <nav className="flex-1 py-4 space-y-1 px-3">
+              <button onClick={() => setActiveTab('dashboard')} className={`w-full flex items-center px-3 py-2.5 rounded-lg transition-colors ${activeTab === 'dashboard' ? 'bg-emerald-800 text-white' : 'hover:bg-slate-800'}`}>
+                <IconDashboard /> <span className="ml-3 font-semibold text-sm">管理儀表板</span>
+              </button>
+              <button onClick={() => setActiveTab('entry')} className={`w-full flex items-center px-3 py-2.5 rounded-lg transition-colors ${activeTab === 'entry' ? 'bg-emerald-800 text-white' : 'hover:bg-slate-800'}`}>
+                <IconEdit /> <span className="ml-3 font-semibold text-sm">數據填報</span>
+              </button>
+              <button onClick={() => setActiveTab('review')} className={`w-full flex items-center px-3 py-2.5 rounded-lg transition-colors ${activeTab === 'review' ? 'bg-emerald-800 text-white' : 'hover:bg-slate-800'}`}>
+                <IconCheck /> <span className="ml-3 font-semibold text-sm">主管審核</span>
+                {activities.filter(a => a.status === 'SUBMITTED').length > 0 && (
+                  <span className="ml-auto bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">
+                    {activities.filter(a => a.status === 'SUBMITTED').length}
+                  </span>
+                )}
+              </button>
+              <button onClick={() => setActiveTab('abatement')} className={`w-full flex items-center px-3 py-2.5 rounded-lg transition-colors ${activeTab === 'abatement' ? 'bg-emerald-800 text-white' : 'hover:bg-slate-800'}`}>
+                <IconTrending /> <span className="ml-3 font-semibold text-sm">減碳方案試算</span>
+              </button>
+              <div className="my-3 border-t border-slate-800 mx-2"></div>
+              <button onClick={() => setActiveTab('report')} className={`w-full flex items-center px-3 py-2.5 rounded-lg transition-colors ${activeTab === 'report' ? 'bg-emerald-800 text-white' : 'hover:bg-slate-800'}`}>
+                <IconReport /> <span className="ml-3 font-semibold text-sm">盤查清冊匯出</span>
+              </button>
+              <button onClick={() => setActiveTab('settings')} className={`w-full flex items-center px-3 py-2.5 rounded-lg transition-colors ${activeTab === 'settings' ? 'bg-emerald-800 text-white' : 'hover:bg-slate-800'}`}>
+                <IconSettings /> <span className="ml-3 font-semibold text-sm">系統與係數設定</span>
+              </button>
+            </nav>
+          </div>
+
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shrink-0">
+              <div className="flex items-center space-x-4">
+                <h1 className="text-xl font-bold text-slate-800">{facilityData.name}</h1>
+                <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-semibold border border-slate-200">2026 年度盤查</span>
+              </div>
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-slate-500 font-semibold">目前身份視角:</span>
+                <select 
+                  value={role} 
+                  onChange={(e) => setRole(e.target.value)}
+                  className="bg-slate-50 border border-slate-200 text-sm rounded-md px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-semibold cursor-pointer"
+                >
+                  <option value="Operator">能管員 (負責填報)</option>
+                  <option value="Manager">店經理 (審核/決策)</option>
+                </select>
+                <div className="h-6 border-l border-slate-300 mx-2"></div>
+                <div className="flex flex-col items-end">
+                  <span className="text-xs font-bold text-slate-700">{user.email || 'Google 帳號'}</span>
+                  <button onClick={handleLogout} className="text-xs text-rose-500 hover:text-rose-700 font-semibold transition-colors mt-0.5">登出系統</button>
+                </div>
+              </div>
+            </header>
+
+            <main className="flex-1 overflow-y-auto p-8">
+              {activeTab === 'dashboard' && <DashboardView activities={activities} />}
+              {activeTab === 'entry' && <DataEntryView onAddActivity={handleAddActivity} />}
+              {activeTab === 'review' && <ReviewView activities={activities} onUpdateStatus={handleUpdateStatus} />}
+              {activeTab === 'abatement' && <AbatementView />}
+              {activeTab === 'report' && <ReportView activities={activities} />}
+              {activeTab === 'settings' && <SettingsView facilityData={facilityData} setFacilityData={setFacilityData} />}
+            </main>
+            
+            <footer className="py-4 text-center">
+              <p className="text-xs text-slate-400 font-medium">© 2026 KellyStudio ( 楊薇玉顧問). All rights reserved.</p>
+            </footer>
+          </div>
+        </div>
+      );
+    }
+
+    // 將 React 應用程式掛載至 DOM 中
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<CarbonApp />);
+  </script>
+</body>
+</html>
