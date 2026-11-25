@@ -551,8 +551,8 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end flex-wrap">
-                                    <button id="btnDownloadAIReport" class="w-full sm:w-auto bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 hover:text-white border border-emerald-400/50 font-semibold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-1.5 text-sm backdrop-blur-sm" title="匯出《能耗熱點診斷與低碳改善建議書》">
-                                        <i class="ph ph-file-arrow-down text-lg"></i> 下載診斷建議
+                                    <button id="btnDownloadAIReport" class="w-full sm:w-auto bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 hover:text-white border border-emerald-400/50 font-semibold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-1.5 text-sm backdrop-blur-sm" title="線上檢視《能耗熱點診斷與低碳改善建議書》">
+                                        <i class="ph ph-file-text text-lg"></i> 診斷建議
                                     </button>
                                     <button id="btnTriggerAI" class="w-full sm:w-auto bg-primary hover:bg-primaryDark text-white font-semibold py-2.5 px-5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/40 text-sm">
                                         <i class="ph ph-sparkle text-lg"></i> 啟動 Gemini 能耗熱點診斷
@@ -1028,6 +1028,29 @@
     <div id="toast" class="fixed bottom-4 right-4 bg-slate-800 text-white px-4 py-3 rounded-xl shadow-xl transform translate-y-24 opacity-0 transition-all duration-300 z-50 flex items-center gap-2.5 border border-slate-700">
         <i id="toastIcon" class="ph ph-check-circle text-emerald-400 text-xl"></i>
         <span id="toastMsg" class="text-xs sm:text-sm font-medium">操作成功</span>
+    </div>
+
+    <!-- ================= MODAL: ONLINE DIAGNOSTIC ADVISORY REPORT ================= -->
+    <div id="aiOnlineModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-gradient-to-r from-slate-800 via-slate-900 to-emerald-950 text-white px-6 py-4 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-2xl">🔮</span>
+                    <div>
+                        <h3 class="font-bold text-base sm:text-lg" id="aiModalTitle">能耗熱點診斷與低碳改善建議書</h3>
+                        <p class="text-[11px] text-slate-300" id="aiModalSubtitle">GWP版本：IPCC-AR6 IPCC第六次評估報告(2021)</p>
+                    </div>
+                </div>
+                <button id="btnCloseAiOnlineModal" class="text-slate-400 hover:text-white p-1"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            <div id="aiOnlineModalBody" class="p-6 overflow-y-auto space-y-5 text-sm bg-slate-50/50">
+                <!-- Populated dynamically when clicking 診斷建議 -->
+            </div>
+            <div class="px-6 py-3.5 bg-slate-100 border-t border-slate-200 flex justify-between items-center shrink-0">
+                <span class="text-[11px] text-slate-500">© 2026 Kelly Studio ( 楊薇玉顧問). All rights reserved.</span>
+                <button id="btnCloseAiOnlineModalFooter" class="px-5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold transition">關閉視窗</button>
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -3080,8 +3103,6 @@
         function downloadAIAdvisoryReport() {
             const venue = venues.find(v => v.id === currentVenueId) || { name: '運動中心', floorArea: 12000, poolType: '溫水泳池' };
             const calc = calculateEmissions();
-            const btn = els.btnDownloadAIReport;
-            const originalBtnHtml = btn.innerHTML;
 
             // 確保畫面上已有診斷內容；若尚未點擊產生，先自動產出並渲染到畫面
             if (!currentAIReportData || els.aiResult.classList.contains('hidden')) {
@@ -3089,130 +3110,64 @@
                 renderAIReport(defaultReport);
             }
 
-            btn.disabled = true;
-            btn.innerHTML = `<i class="ph ph-spinner animate-spin text-lg"></i> 產製 PDF 中...`;
-
-            // 準備乾淨的獨立列印容器，避免 h-screen overflow-hidden / overflow-y-auto 造成 html2canvas 截圖空白
             const reportData = currentAIReportData || buildDefaultHotspotReport(calc, venue);
+            document.getElementById('aiModalTitle').textContent = `${venue.name} — 能耗熱點診斷與低碳改善建議書`;
+            document.getElementById('aiModalSubtitle').textContent = `盤查月份：${currentMonth} ｜ GWP版本：IPCC-AR6 IPCC第六次評估報告(2021) ｜ 產出時間：${new Date().toLocaleString('zh-TW')}`;
+
             const strategiesHtml = (reportData.strategies || []).map((st, idx) => `
-                <div style="border: 1px solid #cbd5e1; border-left: 5px solid #059669; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; background: #ffffff; page-break-inside: avoid;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px;">
-                        <div style="flex: 1;">
-                            <div style="margin-bottom: 6px;">
-                                <span style="display: inline-block; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 5px; margin-right: 6px;">方案 ${idx + 1} · ${st.actionType || '工程改造'}</span>
-                                <span style="font-size: 14px; font-weight: 700; color: #0f172a;">${st.title || '節能改善專案'}</span>
+                <div class="bg-white border border-slate-200 border-l-4 border-l-primary rounded-xl p-4 shadow-sm">
+                    <div class="flex flex-col sm:flex-row justify-between gap-4">
+                        <div class="flex-1 space-y-1.5">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">方案 ${idx + 1} · ${st.actionType || '工程改造'}</span>
+                                <h5 class="font-bold text-slate-800 text-sm sm:text-base">${st.title || '節能改善專案'}</h5>
                             </div>
-                            <p style="font-size: 12px; color: #475569; line-height: 1.6; margin: 0;">${st.description || ''}</p>
+                            <p class="text-xs text-slate-600 leading-relaxed">${st.description || ''}</p>
                         </div>
-                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; min-width: 155px; text-align: right;">
-                            <div style="margin-bottom: 5px;">
-                                <div style="font-size: 10px; color: #64748b;">預估年減碳量</div>
-                                <div style="font-size: 13px; font-weight: 700; color: #059669; font-family: monospace;">${formatCo2e(st.annualCo2ReductionTons || 0, 4)} tCO₂e/年</div>
-                            </div>
-                            <div style="margin-bottom: 5px;">
-                                <div style="font-size: 10px; color: #64748b;">投資回收期 (ROI)</div>
-                                <div style="font-size: 12px; font-weight: 700; color: #1e293b; font-family: monospace;">${st.paybackPeriodYears || 0} 年</div>
+                        <div class="grid grid-cols-3 sm:flex sm:flex-col gap-2 text-right bg-slate-50 p-3 rounded-xl border border-slate-200/80 shrink-0 min-w-[165px]">
+                            <div>
+                                <span class="text-[10px] text-slate-400 block">預估年減碳量</span>
+                                <span class="font-bold font-mono text-primary text-xs sm:text-sm">${formatCo2e(st.annualCo2ReductionTons || 0, 4)} tCO₂e/年</span>
                             </div>
                             <div>
-                                <div style="font-size: 10px; color: #64748b;">預估建置成本</div>
-                                <div style="font-size: 12px; font-weight: 700; color: #334155; font-family: monospace;">NT$ ${(st.estimatedCostTWD || 0).toLocaleString()}</div>
+                                <span class="text-[10px] text-slate-400 block">投資回收期 (ROI)</span>
+                                <span class="font-bold font-mono text-slate-800 text-xs sm:text-sm">${st.paybackPeriodYears || 0} 年</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 block">預估建置成本</span>
+                                <span class="font-bold font-mono text-slate-700 text-xs">NT$ ${(st.estimatedCostTWD || 0).toLocaleString()}</span>
                             </div>
                         </div>
                     </div>
                 </div>
             `).join('');
 
-            const pdfWrapper = document.createElement('div');
-            pdfWrapper.style.width = '720px';
-            pdfWrapper.style.backgroundColor = '#ffffff';
-            pdfWrapper.style.color = '#1e293b';
-            pdfWrapper.style.fontFamily = "'Inter', 'PingFang TC', 'Microsoft JhengHei', sans-serif";
-            pdfWrapper.style.padding = '12px';
-            pdfWrapper.style.boxSizing = 'border-box';
-
-            pdfWrapper.innerHTML = `
-                <div style="background: #0f172a; color: #ffffff; padding: 18px 20px; border-radius: 10px; margin-bottom: 14px;">
-                    <div style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">🔮 ${venue.name} — 能耗熱點診斷與低碳改善建議書</div>
-                    <div style="font-size: 11px; color: #cbd5e1;">盤查月份：${currentMonth} ｜ GWP版本：IPCC-AR6 IPCC第六次評估報告(2021) ｜ 產出時間：${new Date().toLocaleString('zh-TW')}</div>
+            document.getElementById('aiOnlineModalBody').innerHTML = `
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white border border-slate-200 rounded-xl p-4 text-xs shadow-sm">
+                    <div><span class="text-slate-500">場館名稱：</span><strong class="text-slate-800">${venue.name}</strong></div>
+                    <div><span class="text-slate-500">總樓地板面積：</span><strong class="font-mono text-slate-800">${(venue.floorArea || 0).toLocaleString()} m²</strong></div>
+                    <div><span class="text-slate-500">當月總碳排放量：</span><strong class="font-mono text-primary">${formatCo2e(calc.totalTons, 4)} tCO₂e</strong> <span class="text-slate-400">(${formatCo2e(calc.totalKg, 4)} kgCO₂e)</span></div>
+                    <div><span class="text-slate-500">當月頭號能耗熱點：</span><strong class="text-danger">${calc.hotspotName}</strong></div>
+                    <div><span class="text-slate-500">範疇一直接排放：</span><strong class="font-mono text-slate-800">${formatCo2e(calc.scope1Kg / 1000, 4)} tCO₂e</strong></div>
+                    <div><span class="text-slate-500">範疇二能源間接排放：</span><strong class="font-mono text-slate-800">${formatCo2e(calc.scope2Kg / 1000, 4)} tCO₂e</strong></div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px 16px; font-size: 12px; margin-bottom: 16px;">
-                    <div><strong style="color: #475569;">場館名稱：</strong>${venue.name}</div>
-                    <div><strong style="color: #475569;">總樓地板面積：</strong>${(venue.floorArea || 0).toLocaleString()} m²</div>
-                    <div><strong style="color: #475569;">當月總碳排放量：</strong><span style="font-family: monospace; font-weight: 700; color: #059669;">${formatCo2e(calc.totalTons, 4)} tCO₂e</span> (${formatCo2e(calc.totalKg, 4)} kgCO₂e)</div>
-                    <div><strong style="color: #475569;">當月頭號能耗熱點：</strong><span style="font-weight: 700; color: #e11d48;">${calc.hotspotName}</span></div>
-                    <div><strong style="color: #475569;">範疇一直接排放：</strong><span style="font-family: monospace;">${formatCo2e(calc.scope1Kg / 1000, 4)} tCO₂e</span></div>
-                    <div><strong style="color: #475569;">範疇二能源間接排放：</strong><span style="font-family: monospace;">${formatCo2e(calc.scope2Kg / 1000, 4)} tCO₂e</span></div>
+                <div class="bg-rose-50 border border-rose-200 rounded-xl p-4">
+                    <h4 class="font-bold text-rose-800 flex items-center gap-2 mb-1.5 text-sm">
+                        <i class="ph ph-target text-lg"></i> 當月能耗熱點核心診斷
+                    </h4>
+                    <p class="text-xs sm:text-sm text-rose-700 leading-relaxed">${reportData.hotspotAnalysis || '已完成場館能耗熱點分析。'}</p>
                 </div>
 
-                <div style="background: #fff1f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;">
-                    <div style="font-size: 13px; font-weight: 700; color: #9f1239; margin-bottom: 6px;">🎯 當月能耗熱點核心診斷</div>
-                    <p style="font-size: 12px; color: #881337; line-height: 1.65; margin: 0;">${reportData.hotspotAnalysis || '已完成場館能耗熱點分析。'}</p>
-                </div>
-
-                <div style="font-size: 14px; font-weight: 700; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 12px;">
-                    💡 具體低碳改善行動方案 (含投資回收期 ROI)
-                </div>
-
-                ${strategiesHtml}
-
-                <div style="margin-top: 18px; padding-top: 10px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 10px; color: #64748b;">
-                    <div>GWP版本：IPCC-AR6 IPCC第六次評估報告(2021)｜數值精度規範：ISO 14064-1 國際標準小數點後四位</div>
-                    <div style="margin-top: 2px;">© 2026 Kelly Studio ( 楊薇玉顧問). All rights reserved.</div>
+                <div class="space-y-3">
+                    <h4 class="font-bold text-slate-800 flex items-center gap-2 text-sm border-b border-slate-200 pb-2">
+                        <i class="ph ph-lightbulb-filament text-amber-500 text-lg"></i> 具體低碳改善行動方案 (含投資回收期 ROI)
+                    </h4>
+                    ${strategiesHtml}
                 </div>
             `;
 
-            // 暫時以全螢幕白底遮罩掛載列印節點於頂層視窗 (0, 0)，徹底排除父層 overflow-hidden / scroll 裁切空白問題
-            const overlay = document.createElement('div');
-            overlay.style.position = 'fixed';
-            overlay.style.inset = '0';
-            overlay.style.zIndex = '99999';
-            overlay.style.backgroundColor = 'rgba(15, 23, 42, 0.75)';
-            overlay.style.overflow = 'auto';
-            overlay.style.display = 'flex';
-            overlay.style.justifyContent = 'center';
-            overlay.style.alignItems = 'flex-start';
-            overlay.style.padding = '20px';
-            overlay.appendChild(pdfWrapper);
-            document.body.appendChild(overlay);
-
-            const cleanup = () => {
-                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-                btn.disabled = false;
-                btn.innerHTML = originalBtnHtml;
-            };
-
-            const filename = `${venue.name}_能耗熱點診斷建議書_${currentMonth}.pdf`;
-            const opt = {
-                margin: [8, 8, 8, 8],
-                filename: filename,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    backgroundColor: '#ffffff',
-                    logging: false
-                },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-            };
-
-            setTimeout(() => {
-                if (typeof html2pdf !== 'undefined') {
-                    html2pdf().set(opt).from(pdfWrapper).save()
-                        .then(() => {
-                            showToast(`已成功下載 PDF：《${filename}》`);
-                        })
-                        .catch((err) => {
-                            console.error("PDF generation error:", err);
-                            showToast("PDF 產製失敗，請稍後再試", "error");
-                        })
-                        .finally(cleanup);
-                } else {
-                    cleanup();
-                    showToast("PDF 模組載入中，請稍候再點擊", "warn");
-                }
-            }, 250);
+            document.getElementById('aiOnlineModal').classList.remove('hidden');
         }
 
         // ==========================================
@@ -3568,8 +3523,8 @@
             els.btnSave.addEventListener('click', () => saveInventoryData());
             els.btnTriggerAI.addEventListener('click', triggerAIAdvisor);
             els.btnDownloadAIReport.addEventListener('click', downloadAIAdvisoryReport);
-
-            // Excel Import / Export / Template
+            document.getElementById('btnCloseAiOnlineModal').addEventListener('click', () => document.getElementById('aiOnlineModal').classList.add('hidden'));
+            document.getElementById('btnCloseAiOnlineModalFooter').addEventListener('click', () => document.getElementById('aiOnlineModal').classList.add('hidden'));
             document.getElementById('excelFileInput').addEventListener('change', handleExcelImport);
             document.getElementById('btnExportExcel').addEventListener('click', exportStandardExcel);
             document.getElementById('btnDownloadTemplate').addEventListener('click', downloadBlankTemplate);
