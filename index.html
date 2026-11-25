@@ -256,8 +256,8 @@
                                 <input type="number" id="customElecFactor" step="0.001" value="0.466" class="w-full font-mono font-bold text-primary border-b border-slate-200 focus:border-primary focus:outline-none py-0.5">
                             </div>
                             <div>
-                                <span class="text-slate-400 block">GWP 基準 (AR6)</span>
-                                <span class="font-mono font-semibold text-slate-700 block py-0.5">CO₂:1 | CH₄:27.9 | N₂O:273</span>
+                                <span class="text-slate-400 block">GWP版本：IPCC-AR6</span>
+                                <span class="font-semibold text-slate-700 block py-0.5 leading-tight">IPCC第六次評估報告(2021)<br><span class="font-mono text-[10px] text-slate-500">CO₂:1 | CH₄:27.9 | N₂O:273</span></span>
                             </div>
                         </div>
                     </div>
@@ -496,7 +496,10 @@
                                 <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
                                     <i class="ph ph-table text-primary text-lg"></i> 溫室氣體 (CO₂ / CH₄ / N₂O) 精密盤查明細表
                                 </h3>
-                                <span class="text-[11px] text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">對齊《運動場館碳盤查簡易試算表單》能資源工作表</span>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md">GWP版本：IPCC-AR6 IPCC第六次評估報告(2021)</span>
+                                    <span class="text-[11px] text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">對齊《運動場館碳盤查簡易試算表單》能資源工作表</span>
+                                </div>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left border-collapse text-xs">
@@ -831,8 +834,9 @@
                     </div>
 
                     <!-- Footer -->
-                    <footer class="mt-8 py-4 border-t border-slate-200 text-center text-xs text-slate-400 font-medium">
-                        © 2026 KellyStudio ( 楊薇玉顧問). All rights reserved.
+                    <footer class="mt-8 py-4 border-t border-slate-200 text-center text-xs text-slate-400 font-medium space-y-1">
+                        <p>GWP版本：IPCC-AR6 IPCC第六次評估報告(2021)</p>
+                        <p>© 2026 Kelly Studio ( 楊薇玉顧問). All rights reserved.</p>
                     </footer>
 
                 </div>
@@ -1991,7 +1995,8 @@
             const sheet1Data = [
                 ["運動場館碳盤查簡易試算表單 - 基本資料表"],
                 ["系統匯出時間", new Date().toLocaleString('zh-TW')],
-                ["版權宣告", "© 2026 KellyStudio ( 楊薇玉顧問). All rights reserved."],
+                ["GWP版本", "IPCC-AR6 IPCC第六次評估報告(2021)"],
+                ["版權宣告", "© 2026 Kelly Studio ( 楊薇玉顧問). All rights reserved."],
                 [],
                 ["場館名稱", venue.name || ""],
                 ["場館地址", venue.address || ""],
