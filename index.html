@@ -422,6 +422,10 @@
                             <button class="tab-btn active px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 whitespace-nowrap bg-white text-primary shadow-sm" data-tab="dashboard">
                                 <i class="ph ph-chart-polar text-base"></i> 碳排儀表板與 AI 顧問
                             </button>
+                            <button class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900" data-tab="inventorySummary">
+                                <i class="ph ph-clipboard-text text-base text-emerald-600"></i> 盤查清冊總表 (Summary)
+                                <span id="summaryBadgeCount" class="ml-1 px-1.5 py-0.2 bg-emerald-100 text-emerald-700 rounded-full text-[10px]">0</span>
+                            </button>
                             <button class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900" data-tab="electricityLedger">
                                 <i class="ph ph-lightning text-base text-blue-500"></i> 電費月記錄明細
                                 <span id="elecBadgeCount" class="ml-1 px-1.5 py-0.2 bg-blue-100 text-blue-700 rounded-full text-[10px]">0</span>
@@ -587,7 +591,103 @@
                         </div>
                     </div>
 
-                    <!-- ================= TAB 2: ELECTRICITY LEDGER (Excel Sheet 3) ================= -->
+                    <!-- ================= TAB 2: INVENTORY SUMMARY (盤查清冊總表) ================= -->
+                    <div id="tab-inventorySummary" class="tab-content hidden space-y-5">
+                        <div class="glass-panel rounded-2xl p-5 space-y-5">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                                <div>
+                                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                                        <i class="ph ph-clipboard-text text-emerald-600 text-xl"></i> 溫室氣體盤查清冊總表 (Summary)
+                                    </h3>
+                                    <p class="text-xs text-slate-500 mt-0.5">彙整全年度範疇一、範疇二、範疇三排放源清冊，支援直接匯入與匯出 ISO 14064-1 盤查報告總表</p>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <button id="btnSyncSystemToSummary" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition">
+                                        <i class="ph ph-arrows-clockwise text-base text-primary"></i> 同步系統盤查數據
+                                    </button>
+                                    <button id="btnAddSummaryRow" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition shadow-sm">
+                                        <i class="ph ph-plus-circle text-base"></i> 新增清冊排放源
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Scope Summary KPI Cards -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                                <div class="bg-slate-800 text-white p-4 rounded-xl shadow-sm">
+                                    <div class="flex justify-between items-center text-xs text-slate-300">
+                                        <span>清冊總溫室氣體排放量</span>
+                                        <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded font-mono text-[10px]">100.0%</span>
+                                    </div>
+                                    <div class="mt-2 flex items-baseline gap-1.5">
+                                        <span class="text-2xl font-bold font-mono text-emerald-400" id="sumTotalAllTons">0.000</span>
+                                        <span class="text-xs text-slate-300">tCO₂e/年</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 mt-1" id="sumFloorIntensity">單位面積排放強度：0.00 kgCO₂e/m²</p>
+                                </div>
+
+                                <div class="bg-amber-50/80 border border-amber-200/80 p-4 rounded-xl">
+                                    <div class="flex justify-between items-center text-xs font-semibold text-amber-800">
+                                        <span>範疇一 (直接排放)</span>
+                                        <span class="font-mono text-amber-700" id="sumScope1Pct">0.0%</span>
+                                    </div>
+                                    <div class="mt-2 flex items-baseline gap-1.5">
+                                        <span class="text-2xl font-bold font-mono text-slate-800" id="sumScope1Tons">0.000</span>
+                                        <span class="text-xs text-slate-500">tCO₂e</span>
+                                    </div>
+                                    <p class="text-[11px] text-amber-700/80 mt-1">固定燃燒源、移動源、逸散性排放</p>
+                                </div>
+
+                                <div class="bg-blue-50/80 border border-blue-200/80 p-4 rounded-xl">
+                                    <div class="flex justify-between items-center text-xs font-semibold text-blue-800">
+                                        <span>範疇二 (能源間接排放)</span>
+                                        <span class="font-mono text-blue-700" id="sumScope2Pct">0.0%</span>
+                                    </div>
+                                    <div class="mt-2 flex items-baseline gap-1.5">
+                                        <span class="text-2xl font-bold font-mono text-slate-800" id="sumScope2Tons">0.000</span>
+                                        <span class="text-xs text-slate-500">tCO₂e</span>
+                                    </div>
+                                    <p class="text-[11px] text-blue-700/80 mt-1">外購電力 (台電電網排碳係數)</p>
+                                </div>
+
+                                <div class="bg-purple-50/80 border border-purple-200/80 p-4 rounded-xl">
+                                    <div class="flex justify-between items-center text-xs font-semibold text-purple-800">
+                                        <span>範疇三 / 其他間接排放</span>
+                                        <span class="font-mono text-purple-700" id="sumScope3Pct">0.0%</span>
+                                    </div>
+                                    <div class="mt-2 flex items-baseline gap-1.5">
+                                        <span class="text-2xl font-bold font-mono text-slate-800" id="sumScope3Tons">0.000</span>
+                                        <span class="text-xs text-slate-500">tCO₂e</span>
+                                    </div>
+                                    <p class="text-[11px] text-purple-700/80 mt-1">自來水資源、廢棄物委外處理等</p>
+                                </div>
+                            </div>
+
+                            <!-- Summary Master Table -->
+                            <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                                <table class="w-full text-left border-collapse text-xs whitespace-nowrap">
+                                    <thead>
+                                        <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
+                                            <th class="py-2.5 px-3">操作</th>
+                                            <th class="py-2.5 px-3">範疇分類</th>
+                                            <th class="py-2.5 px-3">排放源 / 設施名稱</th>
+                                            <th class="py-2.5 px-3">原燃物料 / 活動項目</th>
+                                            <th class="py-2.5 px-3 text-right">年活動數據</th>
+                                            <th class="py-2.5 px-3">單位</th>
+                                            <th class="py-2.5 px-3 text-right">排放係數</th>
+                                            <th class="py-2.5 px-3 text-right bg-emerald-50/70 font-bold text-emerald-900">年排放量 (tCO₂e)</th>
+                                            <th class="py-2.5 px-3 text-right bg-emerald-50/70">佔比 (%)</th>
+                                            <th class="py-2.5 px-3">數據來源 / 備註</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="summaryTableBody" class="divide-y divide-slate-100">
+                                        <!-- Rows injected by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ================= TAB 3: ELECTRICITY LEDGER (Excel Sheet 3) ================= -->
                     <div id="tab-electricityLedger" class="tab-content hidden space-y-5">
                         <div class="glass-panel rounded-2xl p-5 space-y-4">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
@@ -893,6 +993,64 @@
         </div>
     </div>
 
+    <!-- ================= MODAL: SUMMARY ITEM EDITOR ================= -->
+    <div id="summaryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
+            <div class="bg-secondary text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-base" id="summaryModalTitle">新增盤查清冊排放源項目</h3>
+                <button id="btnCloseSummaryModal" class="text-slate-400 hover:text-white"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            
+            <div class="p-6 space-y-4 text-sm max-h-[80vh] overflow-y-auto">
+                <input type="hidden" id="sumEditId">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">範疇分類 *</label>
+                        <select id="sScope" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none">
+                            <option value="範疇一 (直接排放)">範疇一 (直接排放)</option>
+                            <option value="範疇二 (能源間接排放)">範疇二 (能源間接排放)</option>
+                            <option value="範疇三 (其他間接排放)">範疇三 (其他間接排放)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">排放源 / 設施名稱 *</label>
+                        <input type="text" id="sSourceName" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none" placeholder="例如：泳池熱水鍋爐 / 冰水主機冷媒">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">原燃物料 / 活動項目 *</label>
+                        <input type="text" id="sMaterial" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none" placeholder="例如：天然氣、外購電力、冷媒 R-410A">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">年活動數據 *</label>
+                        <input type="number" id="sActivityValue" min="0" step="0.01" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:border-primary focus:outline-none" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">計量單位 *</label>
+                        <input type="text" id="sUnit" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none" placeholder="kWh / m³ / kg / 公噸">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">排放係數 (kgCO₂e/單位) *</label>
+                        <input type="number" id="sFactor" min="0" step="0.0001" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:border-primary focus:outline-none" placeholder="0.466">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">直接指定年排放量 (tCO₂e)</label>
+                        <input type="number" id="sCo2eTons" min="0" step="0.001" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono bg-slate-50 focus:border-primary focus:outline-none" placeholder="留空則自動由數據×係數換算">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">數據來源 / 佐證單據備註</label>
+                        <input type="text" id="sNote" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none" placeholder="例如：台電年度電費單彙整 / 盤查清冊匯入">
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2">
+                <button id="btnCancelSummaryModal" class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-slate-100">取消</button>
+                <button id="btnSaveSummaryRow" class="px-5 py-2 rounded-lg bg-primary hover:bg-primaryDark text-white text-xs font-semibold shadow-sm">儲存清冊項目</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Notification Toast -->
     <div id="toast" class="fixed bottom-4 right-4 bg-slate-800 text-white px-4 py-3 rounded-xl shadow-xl transform translate-y-24 opacity-0 transition-all duration-300 z-50 flex items-center gap-2.5 border border-slate-700">
         <i id="toastIcon" class="ph ph-check-circle text-emerald-400 text-xl"></i>
@@ -959,6 +1117,7 @@
         let venues = [];
         let currentVenueId = null;
         let allInventories = [];
+        let summaryItems = []; // 盤查清冊總表 (Summary) 項目清單
         let elecBills = [];
         let gasBills = [];
         let currentMonth = "";
@@ -1600,6 +1759,167 @@
             document.getElementById('gasSumCo2Tons').textContent = `${(sumRecogM3 * PRECISION_FACTORS.naturalGas.totalCo2e / 1000).toFixed(2)} tCO₂e`;
         }
 
+        // ==========================================
+        // 7.5 INVENTORY SUMMARY TABLE (盤查清冊總表)
+        // ==========================================
+        function getEffectiveSummaryItems() {
+            const explicit = summaryItems.filter(item => item.venueId === currentVenueId);
+            if (explicit.length > 0) return explicit;
+
+            // Auto-derive live Summary items from saved monthly inventories or current engine if no imported summary rows exist yet
+            const venueInvs = allInventories.filter(inv => inv.venueId === currentVenueId);
+            const calc = calculateEmissions();
+            const elecFactor = parseFloat(els.customElecFactor.value) || 0.466;
+
+            let totalGas = 0, totalDiesel = 0, totalElec = 0, totalWater = 0;
+            if (venueInvs.length > 0) {
+                venueInvs.forEach(inv => {
+                    totalGas += Number(inv.activityData?.naturalGasM3 || 0);
+                    totalDiesel += Number(inv.activityData?.dieselLiter || 0);
+                    totalElec += Number(inv.activityData?.electricityKwh || 0);
+                    totalWater += Number(inv.activityData?.waterM3 || 0);
+                });
+            } else {
+                totalGas = calc.data.gasM3;
+                totalDiesel = calc.data.dieselL;
+                totalElec = calc.data.elecKwh;
+                totalWater = calc.data.waterM3;
+            }
+
+            const derived = [];
+            if (totalGas > 0) {
+                derived.push({
+                    id: 'auto_gas',
+                    isAutoDerived: true,
+                    scope: '範疇一 (直接排放)',
+                    sourceName: '泳池加熱鍋爐 / 燃氣設備',
+                    material: '天然氣',
+                    activityValue: totalGas,
+                    unit: 'm³',
+                    factor: +PRECISION_FACTORS.naturalGas.totalCo2e.toFixed(4),
+                    co2eTons: +(totalGas * PRECISION_FACTORS.naturalGas.totalCo2e / 1000).toFixed(3),
+                    note: venueInvs.length > 0 ? `系統自動彙整 (${venueInvs.length} 個月紀錄)` : '即時試算預覽'
+                });
+            }
+            if (totalDiesel > 0) {
+                derived.push({
+                    id: 'auto_diesel',
+                    isAutoDerived: true,
+                    scope: '範疇一 (直接排放)',
+                    sourceName: '緊急發電機組',
+                    material: '柴油',
+                    activityValue: totalDiesel,
+                    unit: 'L',
+                    factor: +PRECISION_FACTORS.diesel.totalCo2e.toFixed(4),
+                    co2eTons: +(totalDiesel * PRECISION_FACTORS.diesel.totalCo2e / 1000).toFixed(3),
+                    note: venueInvs.length > 0 ? `系統自動彙整 (${venueInvs.length} 個月紀錄)` : '即時試算預覽'
+                });
+            }
+            if (totalElec > 0) {
+                derived.push({
+                    id: 'auto_elec',
+                    isAutoDerived: true,
+                    scope: '範疇二 (能源間接排放)',
+                    sourceName: '全館空調、泳池泵浦及照明電力',
+                    material: '外購電力 (台電)',
+                    activityValue: totalElec,
+                    unit: 'kWh',
+                    factor: elecFactor,
+                    co2eTons: +(totalElec * elecFactor / 1000).toFixed(3),
+                    note: venueInvs.length > 0 ? `系統自動彙整 (${venueInvs.length} 個月紀錄)` : '即時試算預覽'
+                });
+            }
+            if (totalWater > 0) {
+                derived.push({
+                    id: 'auto_water',
+                    isAutoDerived: true,
+                    scope: '範疇三 (其他間接排放)',
+                    sourceName: '泳池補水及淋浴盥洗用水',
+                    material: '自來水',
+                    activityValue: totalWater,
+                    unit: 'm³',
+                    factor: PRECISION_FACTORS.water,
+                    co2eTons: +(totalWater * PRECISION_FACTORS.water / 1000).toFixed(3),
+                    note: venueInvs.length > 0 ? `系統自動彙整 (${venueInvs.length} 個月紀錄)` : '即時試算預覽'
+                });
+            }
+            return derived;
+        }
+
+        function renderSummaryTable() {
+            const items = getEffectiveSummaryItems();
+            document.getElementById('summaryBadgeCount').textContent = items.length;
+
+            let scope1Tons = 0, scope2Tons = 0, scope3Tons = 0;
+            items.forEach(item => {
+                const tons = Number(item.co2eTons) || 0;
+                const sc = String(item.scope || '');
+                if (sc.includes('一') || sc.includes('1')) scope1Tons += tons;
+                else if (sc.includes('二') || sc.includes('2')) scope2Tons += tons;
+                else scope3Tons += tons;
+            });
+
+            const totalTons = scope1Tons + scope2Tons + scope3Tons;
+            const venue = venues.find(v => v.id === currentVenueId) || { floorArea: 0 };
+            const intensity = venue.floorArea > 0 ? ((totalTons * 1000) / venue.floorArea).toFixed(2) : '0.00';
+
+            document.getElementById('sumTotalAllTons').textContent = totalTons.toFixed(3);
+            document.getElementById('sumFloorIntensity').textContent = `單位面積排放強度：${intensity} kgCO₂e/m²`;
+
+            document.getElementById('sumScope1Tons').textContent = scope1Tons.toFixed(3);
+            document.getElementById('sumScope1Pct').textContent = totalTons > 0 ? `${(scope1Tons / totalTons * 100).toFixed(1)}%` : '0.0%';
+
+            document.getElementById('sumScope2Tons').textContent = scope2Tons.toFixed(3);
+            document.getElementById('sumScope2Pct').textContent = totalTons > 0 ? `${(scope2Tons / totalTons * 100).toFixed(1)}%` : '0.0%';
+
+            document.getElementById('sumScope3Tons').textContent = scope3Tons.toFixed(3);
+            document.getElementById('sumScope3Pct').textContent = totalTons > 0 ? `${(scope3Tons / totalTons * 100).toFixed(1)}%` : '0.0%';
+
+            const tbody = document.getElementById('summaryTableBody');
+            if (items.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="py-8 text-center text-slate-400">尚無盤查清冊明細，請匯入包含 Summary 的 Excel 總表或點擊右上角「新增清冊排放源」</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = items.map(item => {
+                const tons = Number(item.co2eTons) || 0;
+                const pct = totalTons > 0 ? (tons / totalTons * 100).toFixed(1) + '%' : '0.0%';
+                const sc = String(item.scope || '');
+                const badgeClass = (sc.includes('一') || sc.includes('1'))
+                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                    : ((sc.includes('二') || sc.includes('2'))
+                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                        : 'bg-purple-50 text-purple-700 border-purple-200');
+
+                const actionBtns = item.isAutoDerived
+                    ? `<span class="text-[10px] text-slate-400 font-sans">自動彙整</span>`
+                    : `<button onclick="window.editSummaryItem('${item.id}')" class="text-emerald-600 hover:underline mr-2">編輯</button>
+                       <button onclick="window.deleteSummaryItem('${item.id}')" class="text-rose-500 hover:underline">刪除</button>`;
+
+                return `
+                    <tr class="hover:bg-slate-50 font-mono">
+                        <td class="py-2.5 px-3 font-sans">${actionBtns}</td>
+                        <td class="py-2.5 px-3 font-sans"><span class="px-2 py-0.5 rounded-full text-[11px] font-semibold border ${badgeClass}">${item.scope}</span></td>
+                        <td class="py-2.5 px-3 font-sans font-medium text-slate-800">${item.sourceName || '-'}</td>
+                        <td class="py-2.5 px-3 font-sans text-slate-700">${item.material || '-'}</td>
+                        <td class="py-2.5 px-3 text-right font-semibold">${Number(item.activityValue || 0).toLocaleString()}</td>
+                        <td class="py-2.5 px-3 font-sans text-slate-500">${item.unit || '-'}</td>
+                        <td class="py-2.5 px-3 text-right text-slate-600">${item.factor ?? '-'}</td>
+                        <td class="py-2.5 px-3 text-right bg-emerald-50/40 font-bold text-emerald-800">${tons.toFixed(3)}</td>
+                        <td class="py-2.5 px-3 text-right bg-emerald-50/40 font-semibold text-emerald-700">${pct}</td>
+                        <td class="py-2.5 px-3 font-sans text-slate-500">${item.note || '-'}</td>
+                    </tr>
+                `;
+            }).join('') + `
+                <tr class="bg-slate-800 text-white font-bold font-mono">
+                    <td colspan="7" class="py-3 px-3 font-sans text-right">盤查清冊總計 (Scope 1 + Scope 2 + Scope 3)</td>
+                    <td class="py-3 px-3 text-right text-emerald-400 text-sm">${totalTons.toFixed(3)} t</td>
+                    <td class="py-3 px-3 text-right text-emerald-400">100.0%</td>
+                    <td class="py-3 px-3 font-sans text-xs text-slate-300">共 ${items.length} 項排放源</td>
+                </tr>
+            `;
+        }
+
         function syncLedgerMonthToEngine(type) {
             const targetYear = parseInt(document.getElementById('elecInventoryYear').value) || new Date().getFullYear();
             if (type === 'elec') {
@@ -1645,6 +1965,28 @@
             const calc = calculateEmissions();
             const targetYear = parseInt(document.getElementById('elecInventoryYear').value) || new Date().getFullYear();
             const wb = XLSX.utils.book_new();
+
+            // --- Sheet 0: Summary (盤查清冊總表) ---
+            const currentSummary = getEffectiveSummaryItems();
+            const summaryHeader = ["範疇分類", "排放源 / 設施名稱", "原燃物料 / 活動項目", "年活動數據", "單位", "排放係數 (kgCO2e/單位)", "年排放量 (tCO2e)", "排放佔比 (%)", "數據來源 / 備註"];
+            const totalSumTons = currentSummary.reduce((acc, i) => acc + (Number(i.co2eTons) || 0), 0);
+            const summaryRows = currentSummary.map(item => {
+                const tons = Number(item.co2eTons) || 0;
+                const pct = totalSumTons > 0 ? +(tons / totalSumTons * 100).toFixed(2) : 0;
+                return [
+                    item.scope, item.sourceName, item.material, Number(item.activityValue || 0),
+                    item.unit, Number(item.factor || 0), tons, pct, item.note || ""
+                ];
+            });
+            const wsSummary = XLSX.utils.aoa_to_sheet([
+                [`${venue.name} - 溫室氣體盤查清冊報告總表 (Summary)`],
+                ["盤查年度", targetYear, "總排放量 (tCO2e)", +totalSumTons.toFixed(3)],
+                [],
+                summaryHeader,
+                ...summaryRows
+            ]);
+            wsSummary['!cols'] = [{ wch: 22 }, { wch: 26 }, { wch: 22 }, { wch: 16 }, { wch: 10 }, { wch: 20 }, { wch: 18 }, { wch: 14 }, { wch: 28 }];
+            XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
 
             const sheet1Data = [
                 ["運動場館碳盤查簡易試算表單 - 基本資料表"],
@@ -1882,6 +2224,99 @@
                     refreshVenueDropdown();
                 }
 
+                // 1.5 Parse Summary / 盤查清冊 Sheet if present
+                const summarySheetName = wb.SheetNames.find(n =>
+                    n.toLowerCase().includes('summary') || n.includes('清冊') || n.includes('總表') || n.includes('彙總')
+                );
+                if (summarySheetName) {
+                    const sRows = XLSX.utils.sheet_to_json(wb.Sheets[summarySheetName], { header: 1 });
+                    let headerIdx = -1;
+                    let colMap = {};
+
+                    // Locate header row dynamically
+                    for (let r = 0; r < Math.min(sRows.length, 20); r++) {
+                        const row = sRows[r] || [];
+                        const rowText = row.map(c => String(c || '').trim()).join('|');
+                        if ((rowText.includes('範疇') || rowText.includes('Scope') || rowText.includes('類別')) &&
+                            (rowText.includes('排放') || rowText.includes('活動') || rowText.includes('項目') || rowText.includes('能源'))) {
+                            headerIdx = r;
+                            row.forEach((cell, cIdx) => {
+                                const h = String(cell || '').replace(/\s+/g, '');
+                                if (h.includes('範疇') || h.toLowerCase().includes('scope')) colMap.scope = cIdx;
+                                else if (h.includes('設施') || h.includes('排放源') || h.includes('製程')) colMap.sourceName = cIdx;
+                                else if (h.includes('物料') || h.includes('能源') || h.includes('項目') || h.includes('名稱')) colMap.material = cIdx;
+                                else if (h.includes('活動數據') || h.includes('使用量') || h.includes('用量') || h.includes('數量')) colMap.activityValue = cIdx;
+                                else if (h.includes('單位')) colMap.unit = cIdx;
+                                else if (h.includes('係數')) colMap.factor = cIdx;
+                                else if (h.includes('排放量') || h.includes('CO2e') || h.includes('當量')) colMap.co2e = cIdx;
+                                else if (h.includes('備註') || h.includes('來源')) colMap.note = cIdx;
+                            });
+                            break;
+                        }
+                    }
+
+                    const importedSummaryRows = [];
+                    if (headerIdx >= 0) {
+                        for (let r = headerIdx + 1; r < sRows.length; r++) {
+                            const row = sRows[r];
+                            if (!row || row.length === 0) continue;
+                            const joined = row.join('');
+                            if (joined.includes('合計') || joined.includes('總計') || joined.includes('Total')) continue;
+
+                            const rawScope = colMap.scope !== undefined ? String(row[colMap.scope] || '').trim() : '';
+                            const rawSource = colMap.sourceName !== undefined ? String(row[colMap.sourceName] || '').trim() : '';
+                            const rawMat = colMap.material !== undefined ? String(row[colMap.material] || '').trim() : '';
+                            const rawAct = colMap.activityValue !== undefined ? parseFloat(String(row[colMap.activityValue] || '').replace(/,/g, '')) : NaN;
+                            const rawUnit = colMap.unit !== undefined ? String(row[colMap.unit] || '').trim() : '';
+                            const rawFactor = colMap.factor !== undefined ? parseFloat(String(row[colMap.factor] || '').replace(/,/g, '')) : NaN;
+                            let rawCo2e = colMap.co2e !== undefined ? parseFloat(String(row[colMap.co2e] || '').replace(/,/g, '')) : NaN;
+                            const rawNote = colMap.note !== undefined ? String(row[colMap.note] || '').trim() : 'Summary 總表匯入';
+
+                            if (!rawScope && !rawSource && !rawMat) continue;
+                            if (isNaN(rawAct) && isNaN(rawCo2e)) continue;
+
+                            // Check unit header if CO2e is in kg instead of tons
+                            const co2HeaderStr = colMap.co2e !== undefined ? String(sRows[headerIdx][colMap.co2e] || '') : '';
+                            if (!isNaN(rawCo2e) && co2HeaderStr.toLowerCase().includes('kg') && !co2HeaderStr.toLowerCase().includes('tco2')) {
+                                rawCo2e = rawCo2e / 1000;
+                            }
+                            if (isNaN(rawCo2e) && !isNaN(rawAct) && !isNaN(rawFactor)) {
+                                rawCo2e = (rawAct * rawFactor) / 1000;
+                            }
+
+                            let normalizedScope = '範疇三 (其他間接排放)';
+                            if (rawScope.includes('一') || rawScope.includes('1')) normalizedScope = '範疇一 (直接排放)';
+                            else if (rawScope.includes('二') || rawScope.includes('2')) normalizedScope = '範疇二 (能源間接排放)';
+
+                            importedSummaryRows.push({
+                                id: 'sum_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                                venueId: currentVenueId,
+                                scope: normalizedScope,
+                                sourceName: rawSource || rawMat || '盤查設施',
+                                material: rawMat || rawSource || '能源/資源',
+                                activityValue: isNaN(rawAct) ? 0 : rawAct,
+                                unit: rawUnit || '-',
+                                factor: isNaN(rawFactor) ? 0 : rawFactor,
+                                co2eTons: isNaN(rawCo2e) ? 0 : +rawCo2e.toFixed(4),
+                                note: rawNote
+                            });
+                        }
+                    }
+
+                    if (importedSummaryRows.length > 0) {
+                        // Replace existing explicit summary items for this venue with newly imported summary
+                        const oldItems = summaryItems.filter(i => i.venueId === currentVenueId);
+                        for (const old of oldItems) {
+                            await removeSummaryItemFromCloud(old.id);
+                        }
+                        summaryItems = summaryItems.filter(i => i.venueId !== currentVenueId).concat(importedSummaryRows);
+                        for (const item of importedSummaryRows) {
+                            await persistSummaryItem(item);
+                        }
+                        parsedSummary.push(`Summary 盤查清冊 (${importedSummaryRows.length}項)`);
+                    }
+                }
+
                 // 2. Parse Sheet 2: 能資源碳排放統計 / 盤查清冊 / 總表
                 const s2Name = wb.SheetNames.find(n => n.includes('能資源') || n.includes('盤查') || n.includes('總表') || n.includes('統計'));
                 if (s2Name) {
@@ -1971,6 +2406,7 @@
                 }
 
                 renderLedgers();
+                renderSummaryTable();
                 updateDashboardUI();
                 setSyncStatus('unsaved');
                 showToast(`Excel 匯入成功！已解析：${parsedSummary.join('、') || '工作表資料'}`);
@@ -2017,11 +2453,13 @@
         }
 
         let unsubInventories = null;
+        let unsubSummaryItems = null;
         let unsubElecBills = null;
         let unsubGasBills = null;
 
         function cleanupCloudListeners() {
             if (unsubInventories) { unsubInventories(); unsubInventories = null; }
+            if (unsubSummaryItems) { unsubSummaryItems(); unsubSummaryItems = null; }
             if (unsubElecBills) { unsubElecBills(); unsubElecBills = null; }
             if (unsubGasBills) { unsubGasBills(); unsubGasBills = null; }
         }
@@ -2061,6 +2499,13 @@
                     snap.forEach(d => allInventories.push({ id: d.id, ...d.data() }));
                     loadDataForCurrentSelection();
                 }, (err) => console.error("Inventory snapshot error:", err));
+
+                const sumCol = collection(db, 'artifacts', appId, 'users', uid, 'summary_items');
+                unsubSummaryItems = onSnapshot(sumCol, (snap) => {
+                    summaryItems = [];
+                    snap.forEach(d => summaryItems.push({ id: d.id, ...d.data() }));
+                    renderSummaryTable();
+                }, (err) => console.error("Summary snapshot error:", err));
 
                 const elecCol = collection(db, 'artifacts', appId, 'users', uid, 'electricity_bills');
                 unsubElecBills = onSnapshot(elecCol, (snap) => {
@@ -2108,6 +2553,21 @@
                 const colName = type === 'elec' ? 'electricity_bills' : 'gas_bills';
                 await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, colName, billId));
             } catch (e) { console.error("Delete bill error:", e); }
+        }
+
+        async function persistSummaryItem(itemObj) {
+            if (!isCloudReady || !currentUser || !db) return;
+            try {
+                const ref = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'summary_items', itemObj.id);
+                await setDoc(ref, itemObj, { merge: true });
+            } catch (e) { console.error("Save summary item error:", e); }
+        }
+
+        async function removeSummaryItemFromCloud(itemId) {
+            if (!isCloudReady || !currentUser || !db) return;
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'summary_items', itemId));
+            } catch (e) { console.error("Delete summary item error:", e); }
         }
 
         function refreshVenueDropdown() {
@@ -2172,6 +2632,7 @@
             }
 
             renderLedgers();
+            renderSummaryTable();
             updateDashboardUI();
         }
 
@@ -2703,6 +3164,101 @@
                 await removeBillFromCloud(type, id);
                 renderLedgers();
                 showToast("已刪除該筆帳單");
+            };
+
+            // --- Summary Modal & Sync Logic ---
+            const summaryModal = document.getElementById('summaryModal');
+            function openSummaryModal(existingItem = null) {
+                document.getElementById('sumEditId').value = existingItem ? existingItem.id : '';
+                document.getElementById('summaryModalTitle').textContent = existingItem ? '編輯盤查清冊排放源' : '新增盤查清冊排放源項目';
+                document.getElementById('sScope').value = existingItem?.scope || '範疇一 (直接排放)';
+                document.getElementById('sSourceName').value = existingItem?.sourceName || '';
+                document.getElementById('sMaterial').value = existingItem?.material || '';
+                document.getElementById('sActivityValue').value = existingItem?.activityValue ?? '';
+                document.getElementById('sUnit').value = existingItem?.unit || 'kWh';
+                document.getElementById('sFactor').value = existingItem?.factor ?? '';
+                document.getElementById('sCo2eTons').value = existingItem?.co2eTons ?? '';
+                document.getElementById('sNote').value = existingItem?.note || '';
+                summaryModal.classList.remove('hidden');
+            }
+
+            document.getElementById('btnAddSummaryRow').addEventListener('click', () => openSummaryModal());
+            ['btnCloseSummaryModal', 'btnCancelSummaryModal'].forEach(id => {
+                document.getElementById(id).addEventListener('click', () => summaryModal.classList.add('hidden'));
+            });
+
+            document.getElementById('btnSyncSystemToSummary').addEventListener('click', async () => {
+                // Clear manual/imported summary overrides so it dynamically aggregates from monthly system data, or materialize current derived items
+                const oldItems = summaryItems.filter(i => i.venueId === currentVenueId);
+                for (const old of oldItems) {
+                    await removeSummaryItemFromCloud(old.id);
+                }
+                summaryItems = summaryItems.filter(i => i.venueId !== currentVenueId);
+                renderSummaryTable();
+                showToast("已重新同步系統各月份碳盤查彙總數據");
+            });
+
+            document.getElementById('btnSaveSummaryRow').addEventListener('click', async () => {
+                const editId = document.getElementById('sumEditId').value;
+                const scope = document.getElementById('sScope').value;
+                const sourceName = document.getElementById('sSourceName').value.trim();
+                const material = document.getElementById('sMaterial').value.trim();
+                const activityValue = parseFloat(document.getElementById('sActivityValue').value) || 0;
+                const unit = document.getElementById('sUnit').value.trim() || '-';
+                const factor = parseFloat(document.getElementById('sFactor').value) || 0;
+                const manualCo2e = parseFloat(document.getElementById('sCo2eTons').value);
+                const co2eTons = !isNaN(manualCo2e) ? manualCo2e : +((activityValue * factor) / 1000).toFixed(4);
+                const note = document.getElementById('sNote').value.trim() || '手動新增清冊項目';
+
+                if (!sourceName || !material) {
+                    showToast("請輸入排放源名稱與原燃物料項目", "error");
+                    return;
+                }
+
+                // If user edits/adds when only auto-derived items existed, materialize existing auto-derived items first
+                const hasExplicit = summaryItems.some(i => i.venueId === currentVenueId);
+                if (!hasExplicit) {
+                    const currentDerived = getEffectiveSummaryItems();
+                    for (const d of currentDerived) {
+                        const materialized = { ...d, id: 'sum_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), venueId: currentVenueId, isAutoDerived: false };
+                        summaryItems.push(materialized);
+                        await persistSummaryItem(materialized);
+                    }
+                }
+
+                const newItem = {
+                    id: editId || ('sum_' + Date.now()),
+                    venueId: currentVenueId,
+                    scope,
+                    sourceName,
+                    material,
+                    activityValue,
+                    unit,
+                    factor,
+                    co2eTons,
+                    note
+                };
+
+                const idx = summaryItems.findIndex(i => i.id === newItem.id);
+                if (idx >= 0) summaryItems[idx] = newItem;
+                else summaryItems.push(newItem);
+
+                await persistSummaryItem(newItem);
+                renderSummaryTable();
+                summaryModal.classList.add('hidden');
+                showToast("盤查清冊項目已儲存");
+            });
+
+            window.editSummaryItem = (id) => {
+                const found = summaryItems.find(i => i.id === id);
+                if (found) openSummaryModal(found);
+            };
+
+            window.deleteSummaryItem = async (id) => {
+                summaryItems = summaryItems.filter(i => i.id !== id);
+                await removeSummaryItemFromCloud(id);
+                renderSummaryTable();
+                showToast("已刪除該筆清冊項目");
             };
         }
 
