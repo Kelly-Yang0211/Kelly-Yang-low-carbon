@@ -161,7 +161,7 @@
                             <i class="ph ph-file-arrow-up text-base"></i>
                             <span class="hidden lg:inline">匯入 Excel</span>
                         </label>
-                        <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden">
+                        <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="hidden">
                         
                         <div class="w-px h-4 bg-slate-600 mx-0.5"></div>
                         
@@ -1109,6 +1109,14 @@
             });
         }
 
+        function parseNumericCell(val) {
+            if (val === undefined || val === null || val === '') return 0;
+            if (typeof val === 'number') return isNaN(val) ? 0 : val;
+            const cleaned = String(val).replace(/[,，\s%$NT元度]/g, '').trim();
+            const parsed = parseFloat(cleaned);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
         // Application State
         let currentUser = null;
         let isLoginMode = true;
@@ -1297,7 +1305,7 @@
                 ? 'ph ph-check-circle text-emerald-400 text-xl'
                 : (type === 'warn' ? 'ph ph-warning-circle text-amber-400 text-xl' : 'ph ph-x-circle text-rose-400 text-xl');
             els.toast.classList.remove('translate-y-24', 'opacity-0');
-            setTimeout(() => els.toast.classList.add('translate-y-24', 'opacity-0'), 3200);
+            setTimeout(() => els.toast.classList.add('translate-y-24', 'opacity-0'), 3800);
         }
 
         function setSyncStatus(status) {
@@ -1923,8 +1931,191 @@
         }
 
         // ==========================================
-        // 9. EXCEL IMPORT (AUTO-CREATE VENUE & PARSE SUMMARY) / EXPORT
+        // 9. EXCEL IMPORT (UNIVERSAL SMART PARSER FOR SUMMARY & MULTI-SHEET) / EXPORT
         // ==========================================
+        function parseAnySummarySheet(sheet) {
+            const rawRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+            const items = [];
+            if (!rawRows || rawRows.length === 0) return items;
+
+            // 1. 尋找標準明細表頭列
+            let headerIdx = -1;
+            let colMap = {};
+
+            for (let i = 0; i < Math.min(rawRows.length, 30); i++) {
+                const row = rawRows[i] || [];
+                const joined = row.map(c => String(c || '')).join('|');
+                const hasScopeOrSource = joined.includes('範疇') || joined.includes('排放源') || joined.includes('能源') || joined.includes('原燃物料') || joined.includes('項目');
+                const hasDataOrEmission = joined.includes('活動數據') || joined.includes('使用量') || joined.includes('用量') || joined.includes('排放量') || joined.includes('tCO2') || joined.includes('當量');
+
+                if (hasScopeOrSource && hasDataOrEmission) {
+                    headerIdx = i;
+                    row.forEach((cell, cIdx) => {
+                        const h = String(cell || '').replace(/\s+/g, '');
+                        if (!h) return;
+                        if (h.includes('範疇') && colMap.scope === undefined) colMap.scope = cIdx;
+                        else if ((h.includes('類別') || h.includes('設施')) && colMap.category === undefined) colMap.category = cIdx;
+                        else if ((h.includes('排放源') || h.includes('能源種類') || h.includes('項目名稱') || h === '項目') && colMap.sourceName === undefined) colMap.sourceName = cIdx;
+                        else if ((h.includes('原燃物料') || h.includes('物料') || h.includes('燃料')) && colMap.material === undefined) colMap.material = cIdx;
+                        else if ((h.includes('活動數據') || h.includes('使用量') || h.includes('用量') || h.includes('數量')) && colMap.activityValue === undefined) colMap.activityValue = cIdx;
+                        else if ((h === '單位' || h.includes('數據單位')) && colMap.unit === undefined) colMap.unit = cIdx;
+                        else if (h.includes('係數') && colMap.factor === undefined) colMap.factor = cIdx;
+                        else if ((h.includes('總排放') || h.includes('tCO2e') || h.includes('tCO2') || h.includes('排放當量') || h.includes('排放量')) && colMap.co2eTons === undefined) {
+                            colMap.co2eTons = cIdx;
+                        }
+                    });
+                    break;
+                }
+            }
+
+            if (headerIdx >= 0) {
+                let lastScope = '範疇一';
+                for (let r = headerIdx + 1; r < rawRows.length; r++) {
+                    const row = rawRows[r];
+                    if (!row || row.length === 0) continue;
+                    const rowText = row.map(c => String(c || '')).join(' ');
+                    if (rowText.includes('合計') || rowText.includes('總計') || rowText.includes('小計') || rowText.includes('Total')) continue;
+
+                    if (colMap.scope !== undefined && row[colMap.scope]) {
+                        const scVal = String(row[colMap.scope]).trim();
+                        if (scVal.includes('一') || scVal.includes('1')) lastScope = '範疇一';
+                        else if (scVal.includes('二') || scVal.includes('2')) lastScope = '範疇二';
+                        else if (scVal.includes('三') || scVal.includes('3')) lastScope = '範疇三';
+                    }
+
+                    let sourceName = colMap.sourceName !== undefined ? String(row[colMap.sourceName] || '').trim() : '';
+                    let material = colMap.material !== undefined ? String(row[colMap.material] || '').trim() : '';
+                    const category = colMap.category !== undefined ? String(row[colMap.category] || '').trim() : '';
+                    const activityVal = colMap.activityValue !== undefined ? parseNumericCell(row[colMap.activityValue]) : 0;
+                    const factorVal = colMap.factor !== undefined ? parseNumericCell(row[colMap.factor]) : 0;
+                    let tonsVal = colMap.co2eTons !== undefined ? parseNumericCell(row[colMap.co2eTons]) : 0;
+                    let unit = colMap.unit !== undefined ? String(row[colMap.unit] || '').trim() : '';
+
+                    // 若無明確名稱欄位，從文字欄位推斷
+                    if (!sourceName && !material) {
+                        for (let c = 0; c < row.length; c++) {
+                            const txt = String(row[c] || '').trim();
+                            if (txt && isNaN(Number(txt.replace(/,/g, ''))) && !txt.includes('範疇')) {
+                                sourceName = txt;
+                                break;
+                            }
+                        }
+                    }
+
+                    const combinedLabel = `${category} ${sourceName} ${material}`;
+                    if (combinedLabel.includes('電力') || combinedLabel.includes('台電')) {
+                        if (!row[colMap.scope]) lastScope = '範疇二';
+                        if (!unit) unit = 'kWh';
+                    } else if (combinedLabel.includes('自來水') || combinedLabel.includes('水資源')) {
+                        if (!row[colMap.scope]) lastScope = '範疇三';
+                        if (!unit) unit = 'm³';
+                    }
+
+                    if (tonsVal === 0 && activityVal > 0 && factorVal > 0) {
+                        tonsVal = (activityVal * factorVal) / 1000;
+                    } else if (tonsVal === 0 && activityVal > 0) {
+                        if (combinedLabel.includes('電')) tonsVal = (activityVal * PRECISION_FACTORS.electricity114) / 1000;
+                        else if (combinedLabel.includes('天然氣') || combinedLabel.includes('瓦斯')) tonsVal = (activityVal * PRECISION_FACTORS.naturalGas.totalCo2e) / 1000;
+                        else if (combinedLabel.includes('柴油')) tonsVal = (activityVal * PRECISION_FACTORS.diesel.totalCo2e) / 1000;
+                        else if (combinedLabel.includes('水')) tonsVal = (activityVal * PRECISION_FACTORS.water) / 1000;
+                    }
+
+                    if ((sourceName || material) && (activityVal > 0 || tonsVal > 0)) {
+                        items.push({
+                            id: 'sum_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                            venueId: currentVenueId,
+                            scope: lastScope,
+                            category: category || (lastScope === '範疇二' ? '外購能源' : '固定燃燒源'),
+                            sourceName: sourceName || material,
+                            material: material || sourceName,
+                            activityValue: activityVal,
+                            unit: unit,
+                            factor: factorVal,
+                            co2eTons: tonsVal
+                        });
+                    }
+                }
+            }
+
+            // 2. 備援：若找不到橫向明細表頭，改以「關鍵字列掃描」擷取 範疇一/範疇二/電力/天然氣/柴油/自來水 數據
+            if (items.length === 0) {
+                rawRows.forEach(row => {
+                    if (!row || row.length === 0) return;
+                    const rowStr = row.map(c => String(c || '')).join(' ').trim();
+                    if (!rowStr || rowStr.includes('合計') || rowStr.includes('總計')) return;
+
+                    const nums = row
+                        .map(c => parseNumericCell(c))
+                        .filter(n => n > 0 && n !== 2024 && n !== 2025 && n !== 2026);
+                    if (nums.length === 0) return;
+
+                    if (rowStr.includes('電力') || rowStr.includes('台電') || rowStr.includes('外購電')) {
+                        const kwh = Math.max(...nums);
+                        const tons = nums.length > 1 ? Math.min(...nums) : (kwh * PRECISION_FACTORS.electricity114) / 1000;
+                        items.push({
+                            id: 'sum_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                            venueId: currentVenueId,
+                            scope: '範疇二',
+                            category: '外購能源',
+                            sourceName: '台電外購電力',
+                            material: '電力',
+                            activityValue: kwh,
+                            unit: 'kWh',
+                            factor: PRECISION_FACTORS.electricity114,
+                            co2eTons: tons
+                        });
+                    } else if (rowStr.includes('天然氣') || rowStr.includes('瓦斯')) {
+                        const m3 = Math.max(...nums);
+                        const tons = nums.length > 1 ? Math.min(...nums) : (m3 * PRECISION_FACTORS.naturalGas.totalCo2e) / 1000;
+                        items.push({
+                            id: 'sum_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                            venueId: currentVenueId,
+                            scope: '範疇一',
+                            category: '固定燃燒源',
+                            sourceName: '熱水鍋爐燃燒設備',
+                            material: '天然氣',
+                            activityValue: m3,
+                            unit: 'm³',
+                            factor: PRECISION_FACTORS.naturalGas.totalCo2e,
+                            co2eTons: tons
+                        });
+                    } else if (rowStr.includes('柴油')) {
+                        const lit = Math.max(...nums);
+                        const tons = nums.length > 1 ? Math.min(...nums) : (lit * PRECISION_FACTORS.diesel.totalCo2e) / 1000;
+                        items.push({
+                            id: 'sum_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                            venueId: currentVenueId,
+                            scope: '範疇一',
+                            category: '固定燃燒源',
+                            sourceName: '緊急發電機組',
+                            material: '柴油',
+                            activityValue: lit,
+                            unit: 'L',
+                            factor: PRECISION_FACTORS.diesel.totalCo2e,
+                            co2eTons: tons
+                        });
+                    } else if (rowStr.includes('自來水')) {
+                        const wm3 = Math.max(...nums);
+                        const tons = nums.length > 1 ? Math.min(...nums) : (wm3 * PRECISION_FACTORS.water) / 1000;
+                        items.push({
+                            id: 'sum_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                            venueId: currentVenueId,
+                            scope: '範疇三',
+                            category: '水資源消耗',
+                            sourceName: '自來水公司供水',
+                            material: '自來水',
+                            activityValue: wm3,
+                            unit: 'm³',
+                            factor: PRECISION_FACTORS.water,
+                            co2eTons: tons
+                        });
+                    }
+                });
+            }
+
+            return items;
+        }
+
         function exportStandardExcel() {
             if (typeof XLSX === 'undefined') {
                 showToast("SheetJS 模組尚未載入完成", "error");
@@ -2119,25 +2310,26 @@
                 };
 
                 // ------------------------------------------------------------------
-                // 1. 解析「基本資料」工作表或從檔名識別新場館 (自動新增場館)
+                // 1. 解析「基本資料」工作表或從所有工作表/檔名識別場館 (自動新增或切換場館)
                 // ------------------------------------------------------------------
                 const kv = {};
                 const s1Name = wb.SheetNames.find(n => n.includes('基本資料') || n.includes('場館') || n.includes('封面'));
-                if (s1Name) {
-                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[s1Name], { header: 1 });
-                    rows.forEach(r => {
+                const sheetsToScanMeta = s1Name ? [s1Name, ...wb.SheetNames.filter(n => n !== s1Name)] : wb.SheetNames;
+
+                sheetsToScanMeta.forEach(shName => {
+                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[shName], { header: 1 });
+                    rows.slice(0, 35).forEach(r => {
                         if (!r) return;
                         for (let c = 0; c < r.length - 1; c++) {
                             const key = String(r[c] || '').replace(/[:：\s*]/g, '');
                             const val = r[c + 1];
-                            if (key && val !== undefined && val !== null && String(val).trim() !== '') {
+                            if (key && val !== undefined && val !== null && String(val).trim() !== '' && !kv[key]) {
                                 kv[key] = String(val).trim();
                             }
                         }
                     });
-                }
+                });
 
-                // 尋找場館名稱 (支援多種常見欄位名稱或檔名推斷)
                 let detectedVenueName =
                     kv['場館名稱'] ||
                     kv['受查場館名稱'] ||
@@ -2148,7 +2340,7 @@
                     '';
 
                 if (!detectedVenueName) {
-                    const cleanFileName = file.name.replace(/\.(xlsx|xls)$/i, '');
+                    const cleanFileName = file.name.replace(/\.(xlsx|xls|csv)$/i, '');
                     if (cleanFileName.includes('中壢')) {
                         detectedVenueName = '桃園市中壢國民運動中心';
                     } else {
@@ -2178,7 +2370,7 @@
                             phone: kv['聯絡電話'] || kv['電話'] || '',
                             fax: kv['聯絡傳真'] || kv['傳真'] || '',
                             email: kv['電子郵件'] || kv['Email'] || kv['E-mail'] || '',
-                            floorArea: parseFloat(String(kv['總樓地板面積(m²)'] || kv['總樓地板面積'] || kv['樓地板面積'] || '12500').replace(/,/g, '')) || 12500,
+                            floorArea: parseNumericCell(kv['總樓地板面積(m²)'] || kv['總樓地板面積'] || kv['樓地板面積']) || 14200,
                             poolType: kv['泳池熱源類型'] || kv['熱源類型'] || '溫水泳池(熱泵+天然氣輔助)'
                         };
                         venues.push(targetVenue);
@@ -2192,7 +2384,7 @@
                         if (kv['聯絡傳真'] || kv['傳真']) targetVenue.fax = kv['聯絡傳真'] || kv['傳真'];
                         if (kv['電子郵件'] || kv['Email']) targetVenue.email = kv['電子郵件'] || kv['Email'];
                         const areaRaw = kv['總樓地板面積(m²)'] || kv['總樓地板面積'] || kv['樓地板面積'];
-                        if (areaRaw) targetVenue.floorArea = parseFloat(String(areaRaw).replace(/,/g, '')) || targetVenue.floorArea;
+                        if (areaRaw) targetVenue.floorArea = parseNumericCell(areaRaw) || targetVenue.floorArea;
                         if (kv['泳池熱源類型']) targetVenue.poolType = kv['泳池熱源類型'];
                     }
 
@@ -2202,9 +2394,9 @@
                     updateVenueHeaderBanner();
 
                     if (isNewlyCreatedVenue) {
-                        parsedSummary.push(`自動新增「${targetVenue.name}」基本資料`);
+                        parsedSummary.push(`自動新增「${targetVenue.name}」`);
                     } else {
-                        parsedSummary.push(`同步更新「${targetVenue.name}」基本資料`);
+                        parsedSummary.push(`同步「${targetVenue.name}」`);
                     }
                 }
 
@@ -2215,95 +2407,40 @@
                 els.inWater.value = '';
 
                 // ------------------------------------------------------------------
-                // 2. 解析「Summary / 盤查清冊總表」工作表
+                // 2. 全方位智慧解析「Summary / 盤查清冊總表」工作表 (支援任意工作表名稱)
                 // ------------------------------------------------------------------
-                const sumSheetName = wb.SheetNames.find(n =>
+                let importedSummaryRows = [];
+                const candidateSummarySheets = wb.SheetNames.filter(n =>
                     n.toLowerCase().includes('summary') ||
                     n.includes('總表') ||
-                    n.includes('清冊')
+                    n.includes('清冊') ||
+                    n.includes('盤查') ||
+                    n.includes('彙總')
                 );
-                if (sumSheetName) {
-                    const rawRows = XLSX.utils.sheet_to_json(wb.Sheets[sumSheetName], { header: 1 });
-                    let headerIdx = -1;
-                    let colMap = {};
+                const orderedSheetsToCheck = [
+                    ...candidateSummarySheets,
+                    ...wb.SheetNames.filter(n => !candidateSummarySheets.includes(n) && !n.includes('基本資料') && !n.includes('電費') && !n.includes('瓦斯'))
+                ];
 
-                    for (let i = 0; i < Math.min(rawRows.length, 20); i++) {
-                        const row = rawRows[i] || [];
-                        const joined = row.map(c => String(c || '')).join('|');
-                        if (joined.includes('範疇') || joined.includes('排放源') || joined.includes('活動數據') || joined.includes('排放量')) {
-                            headerIdx = i;
-                            row.forEach((cell, cIdx) => {
-                                const h = String(cell || '').replace(/\s+/g, '');
-                                if (h.includes('範疇')) colMap.scope = cIdx;
-                                else if (h.includes('類別') || h.includes('設施')) colMap.category = cIdx;
-                                else if (h.includes('排放源') || h.includes('能源種類')) colMap.sourceName = cIdx;
-                                else if (h.includes('原燃物料') || h.includes('物料')) colMap.material = cIdx;
-                                else if (h.includes('活動數據') || h.includes('使用量') || h.includes('用量')) colMap.activityValue = cIdx;
-                                else if (h === '單位' || h.includes('數據單位')) colMap.unit = cIdx;
-                                else if (h.includes('係數')) colMap.factor = cIdx;
-                                else if (h.includes('總排放') || h.includes('tCO2e') || h.includes('當量') || h.includes('排放量')) {
-                                    if (colMap.co2eTons === undefined) colMap.co2eTons = cIdx;
-                                }
-                            });
-                            break;
-                        }
+                for (const shName of orderedSheetsToCheck) {
+                    const parsed = parseAnySummarySheet(wb.Sheets[shName]);
+                    if (parsed.length > 0) {
+                        importedSummaryRows = parsed;
+                        break;
                     }
+                }
 
-                    const importedSummaryRows = [];
-                    let lastScope = '範疇一';
-                    if (headerIdx >= 0) {
-                        for (let r = headerIdx + 1; r < rawRows.length; r++) {
-                            const row = rawRows[r];
-                            if (!row || row.length === 0) continue;
-                            const firstCell = String(row[0] || '').trim();
-                            const rowText = row.map(c => String(c || '')).join(' ');
-                            if (rowText.includes('合計') || rowText.includes('總計') || rowText.includes('Total')) continue;
-
-                            if (colMap.scope !== undefined && row[colMap.scope]) {
-                                const scVal = String(row[colMap.scope]).trim();
-                                if (scVal.includes('一') || scVal.includes('1')) lastScope = '範疇一';
-                                else if (scVal.includes('二') || scVal.includes('2')) lastScope = '範疇二';
-                                else if (scVal.includes('三') || scVal.includes('3')) lastScope = '範疇三';
-                            }
-
-                            const sourceName = colMap.sourceName !== undefined ? String(row[colMap.sourceName] || '').trim() : '';
-                            const material = colMap.material !== undefined ? String(row[colMap.material] || '').trim() : '';
-                            const activityVal = colMap.activityValue !== undefined ? parseFloat(String(row[colMap.activityValue] || '0').replace(/,/g, '')) : 0;
-                            const factorVal = colMap.factor !== undefined ? parseFloat(String(row[colMap.factor] || '0').replace(/,/g, '')) : 0;
-                            let tonsVal = colMap.co2eTons !== undefined ? parseFloat(String(row[colMap.co2eTons] || '0').replace(/,/g, '')) : 0;
-
-                            if (tonsVal === 0 && activityVal > 0 && factorVal > 0) {
-                                tonsVal = (activityVal * factorVal) / 1000;
-                            }
-
-                            if ((sourceName || material) && (activityVal > 0 || tonsVal > 0)) {
-                                importedSummaryRows.push({
-                                    id: 'sum_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-                                    venueId: currentVenueId,
-                                    scope: lastScope,
-                                    category: colMap.category !== undefined ? String(row[colMap.category] || '').trim() : '',
-                                    sourceName: sourceName || material,
-                                    material: material || sourceName,
-                                    activityValue: isNaN(activityVal) ? 0 : activityVal,
-                                    unit: colMap.unit !== undefined ? String(row[colMap.unit] || '').trim() : '',
-                                    factor: isNaN(factorVal) ? 0 : factorVal,
-                                    co2eTons: isNaN(tonsVal) ? 0 : tonsVal
-                                });
-                            }
-                        }
+                if (importedSummaryRows.length > 0) {
+                    summaryItems = summaryItems.filter(s => s.venueId !== currentVenueId);
+                    for (const item of importedSummaryRows) {
+                        item.venueId = currentVenueId;
+                        summaryItems.push(item);
+                        await persistSummaryItem(item);
                     }
+                    parsedSummary.push(`Summary 清冊 (${importedSummaryRows.length}項)`);
 
-                    if (importedSummaryRows.length > 0) {
-                        summaryItems = summaryItems.filter(s => s.venueId !== currentVenueId);
-                        for (const item of importedSummaryRows) {
-                            summaryItems.push(item);
-                            await persistSummaryItem(item);
-                        }
-                        parsedSummary.push(`Summary 清冊 (${importedSummaryRows.length}項)`);
-
-                        // 同步彙整數值回左側「盤查活動數據與係數引擎」並立即刷新所有面板
-                        syncSummaryToLeftEngine(importedSummaryRows);
-                    }
+                    // 立即同步彙整數值回左側「盤查活動數據與係數引擎」
+                    syncSummaryToLeftEngine(importedSummaryRows);
                 }
 
                 // ------------------------------------------------------------------
@@ -2314,15 +2451,17 @@
                     const rows = XLSX.utils.sheet_to_json(wb.Sheets[s2Name], { header: 1 });
                     rows.forEach(r => {
                         const rowStr = (r || []).join(' ');
-                        const val = parseFloat(r[2]);
-                        if (!isNaN(val) && val >= 0) {
+                        const val = parseNumericCell(r[2]);
+                        if (val > 0) {
                             if (rowStr.includes('天然氣')) els.inGas.value = val;
                             else if (rowStr.includes('柴油')) els.inDiesel.value = val;
                             else if (rowStr.includes('電力')) els.inElectricity.value = val;
                             else if (rowStr.includes('自來水')) els.inWater.value = val;
                         }
                     });
-                    parsedSummary.push("能資源數據");
+                    if (!parsedSummary.some(s => s.includes('Summary'))) {
+                        parsedSummary.push("能資源數據");
+                    }
                 }
 
                 // ------------------------------------------------------------------
@@ -2333,7 +2472,7 @@
                     const rows = XLSX.utils.sheet_to_json(wb.Sheets[s3Name]);
                     let importedElecCount = 0;
                     for (const r of rows) {
-                        const usage = parseFloat(r['用電度數(kWh)'] || r['用電度數'] || 0);
+                        const usage = parseNumericCell(r['用電度數(kWh)'] || r['用電度數'] || r['度數']);
                         if (usage > 0 || r['帳單月份']) {
                             const bill = {
                                 id: 'elec_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
@@ -2344,11 +2483,11 @@
                                 billMonth: String(r['帳單月份'] || currentMonth).slice(0, 7),
                                 periodStart: fmtDate(r['計費期間(起)']),
                                 periodEnd: fmtDate(r['計費期間(迄)']),
-                                peakKwh: parseFloat(r['經常(尖峰)度數'] || r['經常(尖峰)'] || 0),
-                                halfPeakKwh: parseFloat(r['週六半尖峰度數'] || r['週六半尖峰'] || 0),
-                                offPeakKwh: parseFloat(r['離峰度數'] || 0),
+                                peakKwh: parseNumericCell(r['經常(尖峰)度數'] || r['經常(尖峰)']),
+                                halfPeakKwh: parseNumericCell(r['週六半尖峰度數'] || r['週六半尖峰']),
+                                offPeakKwh: parseNumericCell(r['離峰度數']),
                                 usage: usage,
-                                amount: parseFloat(r['用電度數金額(元)'] || r['用電度數金額'] || 0),
+                                amount: parseNumericCell(r['用電度數金額(元)'] || r['用電度數金額']),
                                 source: r['資料來源'] || 'Excel匯入',
                                 verified: String(r['核對確認'] || '').toUpperCase() === 'OK'
                             };
@@ -2374,7 +2513,7 @@
                     const rows = XLSX.utils.sheet_to_json(wb.Sheets[s4Name]);
                     let importedGasCount = 0;
                     for (const r of rows) {
-                        const usage = parseFloat(r['用氣度數(m³)'] || r['用氣度數'] || 0);
+                        const usage = parseNumericCell(r['用氣度數(m³)'] || r['用氣度數'] || r['度數']);
                         if (usage > 0 || r['帳單月份']) {
                             const bill = {
                                 id: 'gas_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
@@ -2385,7 +2524,7 @@
                                 periodStart: fmtDate(r['計費期間(起)']),
                                 periodEnd: fmtDate(r['計費期間(迄)']),
                                 usage: usage,
-                                amount: parseFloat(r['用氣度數金額(元)'] || r['用氣度數金額'] || 0),
+                                amount: parseNumericCell(r['用氣度數金額(元)'] || r['用氣度數金額']),
                                 source: r['資料來源'] || 'Excel匯入',
                                 verified: String(r['核對確認'] || '').toUpperCase() === 'OK'
                             };
@@ -2403,7 +2542,27 @@
                     }
                 }
 
+                // 若 Summary 仍為空但左側引擎已從能資源/電費/瓦斯帶入數值，自動建立 Summary 清冊項目
+                if (importedSummaryRows.length === 0) {
+                    const derived = getAutoDerivedSummaryRows();
+                    if (derived.length > 0) {
+                        summaryItems = summaryItems.filter(s => s.venueId !== currentVenueId);
+                        for (const d of derived) {
+                            const rowObj = {
+                                ...d,
+                                id: 'sum_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+                                venueId: currentVenueId
+                            };
+                            delete rowObj.isAuto;
+                            summaryItems.push(rowObj);
+                            await persistSummaryItem(rowObj);
+                        }
+                        parsedSummary.push(`自動彙整清冊 (${derived.length}項)`);
+                    }
+                }
+
                 // 全面同步更新所有圖表、明細表、KPI 與雲端盤查紀錄
+                renderSummaryLedger();
                 renderLedgers();
                 updateDashboardUI();
                 await saveInventoryData();
@@ -2424,7 +2583,7 @@
             let detectedElecFactor = null;
 
             rows.forEach(it => {
-                const label = `${it.sourceName || ''} ${it.material || ''}`;
+                const label = `${it.category || ''} ${it.sourceName || ''} ${it.material || ''}`;
                 const val = Number(it.activityValue) || 0;
                 if (label.includes('電')) {
                     totalElec += val;
@@ -2516,7 +2675,13 @@
                 onSnapshot(sumCol, (snap) => {
                     summaryItems = [];
                     snap.forEach(d => summaryItems.push({ id: d.id, ...d.data() }));
-                    renderSummaryLedger();
+                    const venueRows = summaryItems.filter(s => s.venueId === currentVenueId);
+                    if (venueRows.length > 0 && !els.inElectricity.value && !els.inGas.value && !els.inDiesel.value) {
+                        syncSummaryToLeftEngine(venueRows);
+                        updateDashboardUI();
+                    } else {
+                        renderSummaryLedger();
+                    }
                 }, (err) => console.error("Summary snapshot error:", err));
 
                 // Listen to electricity bills
@@ -2637,10 +2802,15 @@
                 }
                 setSyncStatus('saved');
             } else {
-                els.inGas.value = '';
-                els.inDiesel.value = '';
-                els.inElectricity.value = '';
-                els.inWater.value = '';
+                const venueSummaryRows = summaryItems.filter(s => s.venueId === currentVenueId);
+                if (venueSummaryRows.length > 0) {
+                    syncSummaryToLeftEngine(venueSummaryRows);
+                } else {
+                    els.inGas.value = '';
+                    els.inDiesel.value = '';
+                    els.inElectricity.value = '';
+                    els.inWater.value = '';
+                }
                 resetAIPanel();
                 setSyncStatus('unsaved');
             }
