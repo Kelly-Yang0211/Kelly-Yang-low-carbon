@@ -54,78 +54,53 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden bg-slate-50">
+<body class="h-screen flex flex-col overflow-hidden">
 
-    <!-- ================= INITIAL LOADING SCREEN ================= -->
-    <div id="loadingScreen" class="fixed inset-0 bg-slate-50 z-50 flex flex-col items-center justify-center">
-        <div class="loader mb-3"></div>
-        <p class="font-bold text-slate-600 text-sm">系統載入與驗證連線中...</p>
-    </div>
-
-    <!-- ================= PRESERVED LOGIN SCREEN (MATCHING SCREENSHOT) ================= -->
-    <div id="loginScreen" class="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans overflow-y-auto hidden z-40">
-        <div class="sm:mx-auto sm:w-full sm:max-w-md">
-            <div class="flex justify-center text-emerald-600 mb-4">
+    <!-- ================= LOGIN / REGISTER SCREEN ================= -->
+    <div id="loginScreen" class="fixed inset-0 bg-slate-50 z-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-y-auto">
+        <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
+            <div class="flex justify-center text-emerald-600 mb-3">
                 <span class="text-5xl select-none">🔮</span>
             </div>
-            <h2 class="mt-2 text-center text-3xl font-bold tracking-tight text-slate-900">
+            <h2 class="mt-2 text-center text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
                 運動中心及全民運動館
             </h2>
-            <p class="mt-2 text-center text-lg font-bold text-emerald-600">低碳管理系統</p>
+            <p class="mt-2 text-center text-base sm:text-lg font-bold text-emerald-600">低碳管理系統</p>
         </div>
 
-        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
-            <div class="bg-white py-8 px-6 shadow sm:rounded-xl sm:px-10 border border-slate-200">
-                <div class="mb-6 flex space-x-4 border-b border-slate-200 pb-4">
-                    <button
-                        type="button"
-                        id="tabLoginMode"
-                        class="flex-1 pb-2 font-bold text-sm text-center border-b-2 transition-colors border-emerald-500 text-emerald-600"
-                    >
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="bg-white py-8 px-6 shadow-md rounded-2xl sm:px-10 border border-slate-200">
+                <div class="mb-6 flex space-x-4 border-b border-slate-200 pb-3">
+                    <button type="button" id="tabLoginMode" class="flex-1 pb-2 font-bold text-sm text-center border-b-2 border-emerald-500 text-emerald-600 transition-colors">
                         會員登入
                     </button>
-                    <button
-                        type="button"
-                        id="tabRegisterMode"
-                        class="flex-1 pb-2 font-bold text-sm text-center border-b-2 transition-colors border-transparent text-slate-500 hover:text-slate-700"
-                    >
+                    <button type="button" id="tabRegisterMode" class="flex-1 pb-2 font-bold text-sm text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors">
                         註冊帳號
                     </button>
                 </div>
 
-                <div id="loginErrorBox" class="mb-4 bg-rose-50 border-l-4 border-rose-500 p-3 text-sm text-rose-700 font-semibold rounded hidden"></div>
+                <div id="loginErrorBox" class="hidden mb-4 bg-rose-50 border-l-4 border-rose-500 p-3 text-xs sm:text-sm text-rose-700 font-semibold rounded"></div>
 
-                <form id="emailAuthForm" class="space-y-6">
+                <form id="emailAuthForm" class="space-y-5">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700">電子信箱</label>
                         <div class="mt-1">
-                            <input
-                                type="email"
-                                id="loginEmailInput"
-                                required
-                                class="block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 placeholder-slate-400 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-emerald-500 sm:text-sm"
-                            />
+                            <input type="email" id="loginEmailInput" required placeholder="請輸入您的 Email"
+                                class="block w-full appearance-none rounded-lg border border-slate-300 px-3 py-2.5 placeholder-slate-400 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 sm:text-sm">
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-semibold text-slate-700">密碼</label>
                         <div class="mt-1">
-                            <input
-                                type="password"
-                                id="loginPasswordInput"
-                                required
-                                class="block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 placeholder-slate-400 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-emerald-500 sm:text-sm"
-                            />
+                            <input type="password" id="loginPasswordInput" required placeholder="請輸入密碼 (至少 6 碼)"
+                                class="block w-full appearance-none rounded-lg border border-slate-300 px-3 py-2.5 placeholder-slate-400 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 sm:text-sm">
                         </div>
                     </div>
 
                     <div>
-                        <button
-                            type="submit"
-                            id="btnSubmitEmailAuth"
-                            class="flex w-full justify-center rounded-md border border-transparent bg-emerald-600 py-2.5 px-4 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
-                        >
+                        <button type="submit" id="btnSubmitEmailAuth"
+                            class="flex w-full justify-center rounded-lg border border-transparent bg-emerald-600 py-2.5 px-4 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors disabled:opacity-50">
                             登入系統
                         </button>
                     </div>
@@ -134,20 +109,17 @@
                 <div class="mt-6">
                     <div class="relative">
                         <div class="absolute inset-0 flex items-center">
-                            <div class="w-full border-t border-slate-300"></div>
+                            <div class="w-full border-t border-slate-200"></div>
                         </div>
-                        <div class="relative flex justify-center text-sm">
-                            <span class="bg-white px-2 text-slate-500 font-semibold">或使用快速登入</span>
+                        <div class="relative flex justify-center text-xs sm:text-sm">
+                            <span class="bg-white px-3 text-slate-400 font-medium">或使用快速登入</span>
                         </div>
                     </div>
 
-                    <div class="mt-6">
-                        <button
-                            type="button"
-                            id="btnGoogleLogin"
-                            class="flex w-full items-center justify-center rounded-md border border-slate-300 bg-white py-2.5 px-4 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
-                        >
-                            <svg class="h-5 w-5 mr-2" aria-hidden="true" viewBox="0 0 24 24">
+                    <div class="mt-5">
+                        <button type="button" id="btnGoogleLogin"
+                            class="flex w-full items-center justify-center rounded-lg border border-slate-300 bg-white py-2.5 px-4 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors">
+                            <svg class="h-5 w-5 mr-2.5" aria-hidden="true" viewBox="0 0 24 24">
                                 <path d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z" fill="#EA4335" />
                                 <path d="M23.49 12.275C23.49 11.49 23.415 10.73 23.3 10H12V14.51H18.47C18.18 15.99 17.34 17.25 16.08 18.1L19.945 21.1C22.2 19.01 23.49 15.92 23.49 12.275Z" fill="#4285F4" />
                                 <path d="M5.26498 14.2949C5.02498 13.5699 4.88501 12.7999 4.88501 11.9999C4.88501 11.1999 5.01998 10.4299 5.26498 9.7049L1.275 6.60986C0.46 8.22986 0 10.0599 0 11.9999C0 13.9399 0.46 15.7699 1.28 17.3899L5.26498 14.2949Z" fill="#FBBC05" />
@@ -158,11 +130,15 @@
                     </div>
                 </div>
             </div>
+            <p class="mt-6 text-center text-xs text-slate-400">
+                © 2026 Kelly Studio ( 楊薇玉顧問). All rights reserved. · GWP版本：IPCC-AR6 IPCC第六次評估報告(2021)
+            </p>
         </div>
     </div>
 
-    <!-- ================= MAIN APPLICATION SHELL (SHOWN AFTER AUTH) ================= -->
-    <div id="mainAppContainer" class="h-screen flex flex-col overflow-hidden hidden">
+    <!-- ================= MAIN APPLICATION SHELL ================= -->
+    <div id="mainAppContainer" class="hidden flex-1 flex flex-col h-screen overflow-hidden">
+
         <!-- Top Navigation Bar -->
         <header class="bg-secondary text-white shadow-md z-20 flex-shrink-0">
             <div class="px-4 sm:px-6 py-2.5 flex flex-wrap justify-between items-center gap-2 min-h-[64px]">
@@ -170,14 +146,14 @@
                     <span class="text-3xl select-none">🔮</span>
                     <div>
                         <h1 class="font-bold text-base sm:text-lg leading-tight tracking-wide">運動中心及全民運動館低碳管理系統</h1>
-                        <p class="text-[11px] text-slate-400">Low-Carbon Management System · 114年度精密碳盤查版</p>
+                        <p class="text-[11px] text-slate-400">Low-Carbon Management System · 114年度精密碳盤查版 · GWP版本：IPCC-AR6</p>
                     </div>
                 </div>
                 
                 <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
                     <!-- Excel Actions Dropdown / Quick Buttons -->
                     <div class="flex items-center bg-slate-700/80 rounded-lg p-1 border border-slate-600">
-                        <label for="excelFileInput" class="cursor-pointer px-2.5 py-1.5 rounded-md text-xs font-medium text-emerald-300 hover:bg-slate-600 transition flex items-center gap-1.5" title="匯入《運動場館碳盤查簡易試算表單》">
+                        <label for="excelFileInput" class="cursor-pointer px-2.5 py-1.5 rounded-md text-xs font-medium text-emerald-300 hover:bg-slate-600 transition flex items-center gap-1.5" title="匯入《運動場館碳盤查簡易試算表單》或《盤查清冊總表》">
                             <i class="ph ph-file-arrow-up text-base"></i>
                             <span class="hidden lg:inline">匯入 Excel</span>
                         </label>
@@ -185,7 +161,7 @@
                         
                         <div class="w-px h-4 bg-slate-600 mx-0.5"></div>
                         
-                        <button id="btnExportExcel" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-white hover:bg-slate-600 transition flex items-center gap-1.5" title="匯出完整 4 工作表碳盤查 Excel 報表">
+                        <button id="btnExportExcel" class="px-2.5 py-1.5 rounded-md text-xs font-medium text-white hover:bg-slate-600 transition flex items-center gap-1.5" title="匯出完整碳盤查 Excel 報表 (含 Summary 總表)">
                             <i class="ph ph-microsoft-excel-logo text-base text-emerald-400"></i>
                             <span class="hidden lg:inline">匯出盤查表</span>
                         </button>
@@ -211,14 +187,14 @@
                         </button>
                     </div>
                     
-                    <!-- User Auth Status & Logout -->
-                    <div class="flex items-center gap-2 text-xs text-slate-300 bg-slate-700/50 px-2.5 py-1 rounded-lg border border-slate-600/80">
-                        <div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xs shrink-0">
+                    <!-- User Auth Info & Logout -->
+                    <div class="flex items-center gap-2 text-xs text-slate-300 bg-slate-700/50 px-2.5 py-1.5 rounded-lg border border-slate-600/80">
+                        <div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white font-bold text-xs">
                             <i class="ph ph-user"></i>
                         </div>
-                        <div class="flex flex-col text-left">
-                            <span id="userEmailDisplay" class="max-w-[120px] truncate font-semibold text-white">已登入</span>
-                            <button type="button" id="btnLogout" class="text-[10px] text-rose-400 hover:text-rose-300 font-semibold text-left transition-colors">登出系統</button>
+                        <div class="hidden sm:flex flex-col text-left leading-tight">
+                            <span id="userEmailDisplay" class="max-w-[120px] truncate font-medium text-white">已登入</span>
+                            <button type="button" id="btnLogout" class="text-[10px] text-rose-400 hover:text-rose-300 text-left font-semibold">登出系統</button>
                         </div>
                     </div>
                 </div>
@@ -253,11 +229,12 @@
                         <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-600 bg-white p-2 rounded-lg border border-slate-100">
                             <div>
                                 <span class="text-slate-400 block">電力係數 (kg/kWh)</span>
-                                <input type="number" id="customElecFactor" step="0.001" value="0.466" class="w-full font-mono font-bold text-primary border-b border-slate-200 focus:border-primary focus:outline-none py-0.5">
+                                <input type="number" id="customElecFactor" step="any" value="0.466" class="w-full font-mono font-bold text-primary border-b border-slate-200 focus:border-primary focus:outline-none py-0.5">
                             </div>
                             <div>
-                                <span class="text-slate-400 block font-semibold text-slate-600">GWP版本：IPCC-AR6</span>
-                                <span class="font-semibold text-slate-700 block py-0.5 leading-tight">IPCC第六次評估報告(2021)<br><span class="font-mono text-[10px] text-slate-500">CO₂:1 | CH₄:27.9 | N₂O:273</span></span>
+                                <span class="text-slate-800 font-semibold block">GWP版本：IPCC-AR6</span>
+                                <span class="text-[10px] text-slate-500 block leading-tight">IPCC第六次評估報告(2021)</span>
+                                <span class="font-mono font-semibold text-slate-700 block pt-0.5 text-[10px]">CO₂:1 | CH₄:27.9 | N₂O:273</span>
                             </div>
                         </div>
                     </div>
@@ -279,12 +256,12 @@
                                     <label class="text-xs font-semibold text-slate-700">天然氣用量 (m³)</label>
                                     <span class="text-[11px] font-mono text-slate-500" id="gasFactorBadge">1.8809 kgCO₂e/m³</span>
                                 </div>
-                                <input type="number" id="inputGas" min="0" step="0.01" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="0">
+                                <input type="number" id="inputGas" min="0" step="any" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="0">
                                 <!-- GWP Breakdown Details -->
                                 <div id="gasGwpBreakdown" class="grid grid-cols-3 gap-1 pt-1.5 border-t border-slate-100 text-[10px] text-slate-500 font-mono">
-                                    <div>CO₂: <span id="gasCo2Val" class="text-slate-700 font-semibold">0.00</span> kg</div>
-                                    <div>CH₄: <span id="gasCh4Val" class="text-slate-700 font-semibold">0.00</span> kg</div>
-                                    <div>N₂O: <span id="gasN2oVal" class="text-slate-700 font-semibold">0.00</span> kg</div>
+                                    <div>CO₂: <span id="gasCo2Val" class="text-slate-700 font-semibold">0.0000</span> kg</div>
+                                    <div>CH₄: <span id="gasCh4Val" class="text-slate-700 font-semibold">0.0000</span> kg</div>
+                                    <div>N₂O: <span id="gasN2oVal" class="text-slate-700 font-semibold">0.0000</span> kg</div>
                                 </div>
                             </div>
 
@@ -293,12 +270,12 @@
                                     <label class="text-xs font-semibold text-slate-700">緊急發電機柴油 (L)</label>
                                     <span class="text-[11px] font-mono text-slate-500" id="dieselFactorBadge">2.6147 kgCO₂e/L</span>
                                 </div>
-                                <input type="number" id="inputDiesel" min="0" step="0.01" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="0">
+                                <input type="number" id="inputDiesel" min="0" step="any" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="0">
                                 <!-- GWP Breakdown Details -->
                                 <div id="dieselGwpBreakdown" class="grid grid-cols-3 gap-1 pt-1.5 border-t border-slate-100 text-[10px] text-slate-500 font-mono">
-                                    <div>CO₂: <span id="dieselCo2Val" class="text-slate-700 font-semibold">0.00</span> kg</div>
-                                    <div>CH₄: <span id="dieselCh4Val" class="text-slate-700 font-semibold">0.00</span> kg</div>
-                                    <div>N₂O: <span id="dieselN2oVal" class="text-slate-700 font-semibold">0.00</span> kg</div>
+                                    <div>CO₂: <span id="dieselCo2Val" class="text-slate-700 font-semibold">0.0000</span> kg</div>
+                                    <div>CH₄: <span id="dieselCh4Val" class="text-slate-700 font-semibold">0.0000</span> kg</div>
+                                    <div>N₂O: <span id="dieselN2oVal" class="text-slate-700 font-semibold">0.0000</span> kg</div>
                                 </div>
                             </div>
                         </div>
@@ -316,7 +293,7 @@
                         </div>
                         <div class="bg-white border border-slate-200 rounded-xl p-3 space-y-1.5">
                             <label class="block text-xs font-semibold text-slate-700">外購電力總用電度數 (kWh)</label>
-                            <input type="number" id="inputElectricity" min="0" step="1" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-bold text-primary" placeholder="輸入台電度數">
+                            <input type="number" id="inputElectricity" min="0" step="any" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-bold text-primary" placeholder="輸入台電度數">
                         </div>
                     </div>
 
@@ -336,7 +313,7 @@
                                 <label class="text-xs font-semibold text-slate-700">自來水用量 (m³)</label>
                                 <span class="text-[11px] font-mono text-slate-400">0.152 kgCO₂e/m³</span>
                             </div>
-                            <input type="number" id="inputWater" min="0" step="1" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="0">
+                            <input type="number" id="inputWater" min="0" step="any" class="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="0">
                         </div>
                     </div>
 
@@ -422,7 +399,7 @@
                             <button class="tab-btn active px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 whitespace-nowrap bg-white text-primary shadow-sm" data-tab="dashboard">
                                 <i class="ph ph-chart-polar text-base"></i> 碳排儀表板與 AI 顧問
                             </button>
-                            <button class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900" data-tab="inventorySummary">
+                            <button class="tab-btn px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900" data-tab="summaryLedger">
                                 <i class="ph ph-clipboard-text text-base text-emerald-600"></i> 盤查清冊總表 (Summary)
                                 <span id="summaryBadgeCount" class="ml-1 px-1.5 py-0.2 bg-emerald-100 text-emerald-700 rounded-full text-[10px]">0</span>
                             </button>
@@ -448,10 +425,10 @@
                                     <span class="p-1.5 bg-emerald-50 text-primary rounded-lg"><i class="ph ph-globe-hemisphere-east text-lg"></i></span>
                                 </div>
                                 <div class="mt-2 flex items-baseline gap-2">
-                                    <span class="text-3xl font-bold text-slate-800 font-mono" id="kpiTotal">0.00</span>
+                                    <span class="text-2xl sm:text-3xl font-bold text-slate-800 font-mono" id="kpiTotal">0.0000</span>
                                     <span class="text-xs font-semibold text-slate-400">tCO₂e</span>
                                 </div>
-                                <p class="text-[11px] text-slate-400 mt-1" id="kpiTotalKgSub">約 0 kgCO₂e</p>
+                                <p class="text-[11px] text-slate-400 mt-1" id="kpiTotalKgSub">約 0.0000 kgCO₂e</p>
                             </div>
 
                             <div class="glass-panel rounded-2xl p-5 border-t-4 border-t-amber-500">
@@ -460,10 +437,10 @@
                                     <span class="p-1.5 bg-amber-50 text-amber-600 rounded-lg"><i class="ph ph-fire text-lg"></i></span>
                                 </div>
                                 <div class="mt-2 flex items-baseline gap-2">
-                                    <span class="text-2xl font-bold text-slate-800 font-mono" id="kpiScope1">0</span>
+                                    <span class="text-2xl font-bold text-slate-800 font-mono" id="kpiScope1">0.0000</span>
                                     <span class="text-xs font-semibold text-slate-400">kgCO₂e</span>
                                 </div>
-                                <p class="text-[11px] text-slate-500 mt-1" id="kpiScope1Pct">佔總排放 0.0%</p>
+                                <p class="text-[11px] text-slate-500 mt-1" id="kpiScope1Pct">佔總排放 0.00%</p>
                             </div>
 
                             <div class="glass-panel rounded-2xl p-5 border-t-4 border-t-blue-500">
@@ -472,10 +449,10 @@
                                     <span class="p-1.5 bg-blue-50 text-blue-600 rounded-lg"><i class="ph ph-lightning text-lg"></i></span>
                                 </div>
                                 <div class="mt-2 flex items-baseline gap-2">
-                                    <span class="text-2xl font-bold text-slate-800 font-mono" id="kpiScope2">0</span>
+                                    <span class="text-2xl font-bold text-slate-800 font-mono" id="kpiScope2">0.0000</span>
                                     <span class="text-xs font-semibold text-slate-400">kgCO₂e</span>
                                 </div>
-                                <p class="text-[11px] text-slate-500 mt-1" id="kpiScope2Pct">佔總排放 0.0%</p>
+                                <p class="text-[11px] text-slate-500 mt-1" id="kpiScope2Pct">佔總排放 0.00%</p>
                             </div>
 
                             <div class="glass-panel rounded-2xl p-5 border-t-4 border-t-danger relative overflow-hidden">
@@ -496,10 +473,7 @@
                                 <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
                                     <i class="ph ph-table text-primary text-lg"></i> 溫室氣體 (CO₂ / CH₄ / N₂O) 精密盤查明細表
                                 </h3>
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md">GWP版本：IPCC-AR6 IPCC第六次評估報告(2021)</span>
-                                    <span class="text-[11px] text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">對齊《運動場館碳盤查簡易試算表單》能資源工作表</span>
-                                </div>
+                                <span class="text-[11px] text-emerald-800 font-medium bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md">GWP版本：IPCC-AR6 IPCC第六次評估報告(2021)</span>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left border-collapse text-xs">
@@ -570,9 +544,14 @@
                                         <p class="text-xs text-slate-300">針對泳池熱泵、空調冰水主機與場館照明產出 ROI 技術改善建議</p>
                                     </div>
                                 </div>
-                                <button id="btnTriggerAI" class="w-full sm:w-auto bg-primary hover:bg-primaryDark text-white font-semibold py-2.5 px-5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/40 text-sm">
-                                    <i class="ph ph-sparkle text-lg"></i> 啟動 Gemini 能耗熱點診斷
-                                </button>
+                                <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end flex-wrap">
+                                    <button id="btnDownloadAIReport" class="hidden w-full sm:w-auto bg-white/10 hover:bg-white/20 text-emerald-200 hover:text-white border border-emerald-400/40 font-semibold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-1.5 text-sm backdrop-blur-sm" title="匯出《能耗熱點診斷與低碳改善建議書》">
+                                        <i class="ph ph-file-arrow-down text-lg"></i> 下載診斷建議
+                                    </button>
+                                    <button id="btnTriggerAI" class="w-full sm:w-auto bg-primary hover:bg-primaryDark text-white font-semibold py-2.5 px-5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/40 text-sm">
+                                        <i class="ph ph-sparkle text-lg"></i> 啟動 Gemini 能耗熱點診斷
+                                    </button>
+                                </div>
                             </div>
                             
                             <div class="p-6 bg-white min-h-[180px]" id="aiReportContainer">
@@ -594,22 +573,22 @@
                         </div>
                     </div>
 
-                    <!-- ================= TAB 2: INVENTORY SUMMARY (盤查清冊總表) ================= -->
-                    <div id="tab-inventorySummary" class="tab-content hidden space-y-5">
+                    <!-- ================= TAB 1.5: INVENTORY SUMMARY (盤查清冊總表) ================= -->
+                    <div id="tab-summaryLedger" class="tab-content hidden space-y-5">
                         <div class="glass-panel rounded-2xl p-5 space-y-5">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                                 <div>
                                     <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
                                         <i class="ph ph-clipboard-text text-emerald-600 text-xl"></i> 溫室氣體盤查清冊總表 (Summary)
                                     </h3>
-                                    <p class="text-xs text-slate-500 mt-0.5">彙整全年度範疇一、範疇二、範疇三排放源清冊，支援直接匯入與匯出 ISO 14064-1 盤查報告總表</p>
+                                    <p class="text-xs text-slate-500 mt-0.5">完整彙整範疇一、範疇二、範疇三排放源活動數據、排放係數與年度碳排當量 (tCO₂e)</p>
                                 </div>
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <button id="btnSyncSystemToSummary" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition">
-                                        <i class="ph ph-arrows-clockwise text-base text-primary"></i> 同步系統盤查數據
-                                    </button>
                                     <button id="btnAddSummaryRow" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition shadow-sm">
                                         <i class="ph ph-plus-circle text-base"></i> 新增清冊排放源
+                                    </button>
+                                    <button id="btnSyncAllToSummary" class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition shadow-sm" title="將已儲存的各月盤查資料重新彙整至 Summary">
+                                        <i class="ph ph-arrows-clockwise text-base"></i> 彙整各月盤查數據
                                     </button>
                                 </div>
                             </div>
@@ -619,22 +598,22 @@
                                 <div class="bg-slate-800 text-white p-4 rounded-xl shadow-sm">
                                     <div class="flex justify-between items-center text-xs text-slate-300">
                                         <span>清冊總溫室氣體排放量</span>
-                                        <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded font-mono text-[10px]">100.0%</span>
+                                        <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded font-mono text-[10px]">100.00%</span>
                                     </div>
                                     <div class="mt-2 flex items-baseline gap-1.5">
-                                        <span class="text-2xl font-bold font-mono text-emerald-400" id="sumTotalAllTons">0.000</span>
+                                        <span class="text-2xl font-bold font-mono text-emerald-400" id="sumTotalAllTons">0.0000</span>
                                         <span class="text-xs text-slate-300">tCO₂e/年</span>
                                     </div>
-                                    <p class="text-[11px] text-slate-400 mt-1" id="sumFloorIntensity">單位面積排放強度：0.00 kgCO₂e/m²</p>
+                                    <p class="text-[11px] text-slate-400 mt-1" id="sumFloorIntensity">單位面積排放強度：0.0000 kgCO₂e/m²</p>
                                 </div>
 
                                 <div class="bg-amber-50/80 border border-amber-200/80 p-4 rounded-xl">
                                     <div class="flex justify-between items-center text-xs font-semibold text-amber-800">
                                         <span>範疇一 (直接排放)</span>
-                                        <span class="font-mono text-amber-700" id="sumScope1Pct">0.0%</span>
+                                        <span class="font-mono text-amber-700" id="sumScope1Pct">0.00%</span>
                                     </div>
                                     <div class="mt-2 flex items-baseline gap-1.5">
-                                        <span class="text-2xl font-bold font-mono text-slate-800" id="sumScope1Tons">0.000</span>
+                                        <span class="text-2xl font-bold font-mono text-slate-800" id="sumScope1Tons">0.0000</span>
                                         <span class="text-xs text-slate-500">tCO₂e</span>
                                     </div>
                                     <p class="text-[11px] text-amber-700/80 mt-1">固定燃燒源、移動源、逸散性排放</p>
@@ -643,10 +622,10 @@
                                 <div class="bg-blue-50/80 border border-blue-200/80 p-4 rounded-xl">
                                     <div class="flex justify-between items-center text-xs font-semibold text-blue-800">
                                         <span>範疇二 (能源間接排放)</span>
-                                        <span class="font-mono text-blue-700" id="sumScope2Pct">0.0%</span>
+                                        <span class="font-mono text-blue-700" id="sumScope2Pct">0.00%</span>
                                     </div>
                                     <div class="mt-2 flex items-baseline gap-1.5">
-                                        <span class="text-2xl font-bold font-mono text-slate-800" id="sumScope2Tons">0.000</span>
+                                        <span class="text-2xl font-bold font-mono text-slate-800" id="sumScope2Tons">0.0000</span>
                                         <span class="text-xs text-slate-500">tCO₂e</span>
                                     </div>
                                     <p class="text-[11px] text-blue-700/80 mt-1">外購電力 (台電電網排碳係數)</p>
@@ -655,10 +634,10 @@
                                 <div class="bg-purple-50/80 border border-purple-200/80 p-4 rounded-xl">
                                     <div class="flex justify-between items-center text-xs font-semibold text-purple-800">
                                         <span>範疇三 / 其他間接排放</span>
-                                        <span class="font-mono text-purple-700" id="sumScope3Pct">0.0%</span>
+                                        <span class="font-mono text-purple-700" id="sumScope3Pct">0.00%</span>
                                     </div>
                                     <div class="mt-2 flex items-baseline gap-1.5">
-                                        <span class="text-2xl font-bold font-mono text-slate-800" id="sumScope3Tons">0.000</span>
+                                        <span class="text-2xl font-bold font-mono text-slate-800" id="sumScope3Tons">0.0000</span>
                                         <span class="text-xs text-slate-500">tCO₂e</span>
                                     </div>
                                     <p class="text-[11px] text-purple-700/80 mt-1">自來水資源、廢棄物委外處理等</p>
@@ -671,18 +650,18 @@
                                     <thead>
                                         <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
                                             <th class="py-2.5 px-3">操作</th>
-                                            <th class="py-2.5 px-3">範疇分類</th>
-                                            <th class="py-2.5 px-3">排放源 / 設施名稱</th>
-                                            <th class="py-2.5 px-3">原燃物料 / 活動項目</th>
-                                            <th class="py-2.5 px-3 text-right">年活動數據</th>
+                                            <th class="py-2.5 px-3">盤查範疇</th>
+                                            <th class="py-2.5 px-3">排放源 / 設備名稱</th>
+                                            <th class="py-2.5 px-3">原燃物料 / 能源種類</th>
+                                            <th class="py-2.5 px-3 text-right">年度活動數據</th>
                                             <th class="py-2.5 px-3">單位</th>
-                                            <th class="py-2.5 px-3 text-right">排放係數</th>
-                                            <th class="py-2.5 px-3 text-right bg-emerald-50/70 font-bold text-emerald-900">年排放量 (tCO₂e)</th>
-                                            <th class="py-2.5 px-3 text-right bg-emerald-50/70">佔比 (%)</th>
-                                            <th class="py-2.5 px-3">數據來源 / 備註</th>
+                                            <th class="py-2.5 px-3 text-right">排放係數 (kgCO₂e/單位)</th>
+                                            <th class="py-2.5 px-3 text-right bg-emerald-50/80 font-bold text-emerald-800">總排放量 (tCO₂e)</th>
+                                            <th class="py-2.5 px-3 text-right bg-emerald-50/80 font-semibold text-emerald-700">排放占比</th>
+                                            <th class="py-2.5 px-3">資料來源 / 備註</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="summaryTableBody" class="divide-y divide-slate-100">
+                                    <tbody id="summaryLedgerBody" class="divide-y divide-slate-100">
                                         <!-- Rows injected by JS -->
                                     </tbody>
                                 </table>
@@ -690,7 +669,7 @@
                         </div>
                     </div>
 
-                    <!-- ================= TAB 3: ELECTRICITY LEDGER (Excel Sheet 3) ================= -->
+                    <!-- ================= TAB 2: ELECTRICITY LEDGER (Excel Sheet 3) ================= -->
                     <div id="tab-electricityLedger" class="tab-content hidden space-y-5">
                         <div class="glass-panel rounded-2xl p-5 space-y-4">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
@@ -730,7 +709,7 @@
                                 </div>
                                 <div>
                                     <span class="text-slate-500 block">認列電力碳排總量</span>
-                                    <span class="text-base font-bold font-mono text-primary" id="elecSumCo2Tons">0.00 tCO₂e</span>
+                                    <span class="text-base font-bold font-mono text-primary" id="elecSumCo2Tons">0.0000 tCO₂e</span>
                                 </div>
                             </div>
 
@@ -801,7 +780,7 @@
                                 </div>
                                 <div>
                                     <span class="text-slate-500 block">認列天然氣碳排量</span>
-                                    <span class="text-base font-bold font-mono text-primary" id="gasSumCo2Tons">0.00 tCO₂e</span>
+                                    <span class="text-base font-bold font-mono text-primary" id="gasSumCo2Tons">0.0000 tCO₂e</span>
                                 </div>
                             </div>
 
@@ -834,8 +813,8 @@
                     </div>
 
                     <!-- Footer -->
-                    <footer class="mt-8 py-4 border-t border-slate-200 text-center text-xs text-slate-400 font-medium space-y-1">
-                        <p class="text-slate-500 font-semibold">GWP版本：IPCC-AR6 IPCC第六次評估報告(2021)</p>
+                    <footer class="mt-8 py-4 border-t border-slate-200 text-center text-xs text-slate-500 space-y-1">
+                        <p class="font-medium text-slate-600">GWP版本：IPCC-AR6 IPCC第六次評估報告(2021)</p>
                         <p>© 2026 Kelly Studio ( 楊薇玉顧問). All rights reserved.</p>
                     </footer>
 
@@ -971,7 +950,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1" id="bUsageLabel">總用電度數 (kWh) *</label>
-                        <input type="number" id="bUsage" min="0" step="0.01" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono font-bold text-primary focus:border-primary focus:outline-none" placeholder="0">
+                        <input type="number" id="bUsage" min="0" step="any" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono font-bold text-primary focus:border-primary focus:outline-none" placeholder="0">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">帳單度數金額 (新台幣元)</label>
@@ -997,53 +976,52 @@
         </div>
     </div>
 
-    <!-- ================= MODAL: SUMMARY ITEM EDITOR ================= -->
+    <!-- ================= MODAL: SUMMARY ROW EDITOR ================= -->
     <div id="summaryModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
+        <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden">
             <div class="bg-secondary text-white px-6 py-4 flex justify-between items-center">
-                <h3 class="font-bold text-base" id="summaryModalTitle">新增盤查清冊排放源項目</h3>
+                <h3 class="font-bold text-base" id="summaryModalTitle">新增盤查清冊排放源 (Summary)</h3>
                 <button id="btnCloseSummaryModal" class="text-slate-400 hover:text-white"><i class="ph ph-x text-xl"></i></button>
             </div>
             
             <div class="p-6 space-y-4 text-sm max-h-[80vh] overflow-y-auto">
-                <input type="hidden" id="sumEditId">
-
+                <input type="hidden" id="summaryEditId">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">範疇分類 *</label>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">盤查範疇 *</label>
                         <select id="sScope" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none">
-                            <option value="範疇一 (直接排放)">範疇一 (直接排放)</option>
-                            <option value="範疇二 (能源間接排放)">範疇二 (能源間接排放)</option>
-                            <option value="範疇三 (其他間接排放)">範疇三 (其他間接排放)</option>
+                            <option value="範疇一">範疇一 (直接排放)</option>
+                            <option value="範疇二">範疇二 (能源間接排放)</option>
+                            <option value="範疇三">範疇三 (其他間接排放)</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">排放源 / 設施名稱 *</label>
-                        <input type="text" id="sSourceName" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none" placeholder="例如：泳池熱水鍋爐 / 冰水主機冷媒">
-                    </div>
-                    <div class="sm:col-span-2">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">原燃物料 / 活動項目 *</label>
-                        <input type="text" id="sMaterial" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none" placeholder="例如：天然氣、外購電力、冷媒 R-410A">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">排放源 / 設備名稱 *</label>
+                        <input type="text" id="sSourceName" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none" placeholder="例如：緊急發電機、空調冰水主機">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">年活動數據 *</label>
-                        <input type="number" id="sActivityValue" min="0" step="0.01" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:border-primary focus:outline-none" placeholder="0">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">原燃物料 / 能源種類 *</label>
+                        <input type="text" id="sMaterial" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none" placeholder="例如：柴油、外購電力、冷媒 R-410A">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">計量單位 *</label>
-                        <input type="text" id="sUnit" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none" placeholder="kWh / m³ / kg / 公噸">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">活動數據單位 *</label>
+                        <input type="text" id="sUnit" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none" placeholder="kWh / m³ / L / kg">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">排放係數 (kgCO₂e/單位) *</label>
-                        <input type="number" id="sFactor" min="0" step="0.0001" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:border-primary focus:outline-none" placeholder="0.466">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">年度活動數據 *</label>
+                        <input type="number" id="sActivityVal" min="0" step="any" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:border-primary focus:outline-none" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">排放係數 (kgCO₂e/單位)</label>
+                        <input type="number" id="sFactor" min="0" step="any" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono focus:border-primary focus:outline-none" placeholder="0.466">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">直接指定年排放量 (tCO₂e)</label>
-                        <input type="number" id="sCo2eTons" min="0" step="0.001" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono bg-slate-50 focus:border-primary focus:outline-none" placeholder="留空則自動由數據×係數換算">
+                        <input type="number" id="sCo2eTons" min="0" step="any" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono bg-slate-50 focus:border-primary focus:outline-none" placeholder="留空則自動由數據×係數換算">
                     </div>
-                    <div class="sm:col-span-2">
-                        <label class="block text-xs font-semibold text-slate-600 mb-1">數據來源 / 佐證單據備註</label>
-                        <input type="text" id="sNote" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none" placeholder="例如：台電年度電費單彙整 / 盤查清冊匯入">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">資料來源 / 佐證備註</label>
+                        <input type="text" id="sNote" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-primary focus:outline-none" placeholder="台電電費單 / 維修保養紀錄">
                     </div>
                 </div>
             </div>
@@ -1063,11 +1041,29 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, deleteDoc, collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ==========================================
-        // 1. PRECISION EMISSION FACTORS & GWP (114年度 Excel 標準)
+        // 1. FIREBASE SDK CONFIGURATION (USER PROJECT)
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPP9x3aYxgBz51CRRu7AseEVBLGqztpD8",
+            authDomain: "a01-low-carbon-management.firebaseapp.com",
+            projectId: "a01-low-carbon-management",
+            storageBucket: "a01-low-carbon-management.firebasestorage.app",
+            messagingSenderId: "90010133926",
+            appId: "1:90010133926:web:784d755325c25d9af31b67",
+            measurementId: "G-KKQ7J1VRTW"
+        };
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : '1:90010133926:web:784d755325c25d9af31b67';
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // ==========================================
+        // 2. PRECISION EMISSION FACTORS & GWP (114年度 Excel 標準 / IPCC-AR6)
         // ==========================================
         const GWP_AR6 = {
             CO2: 1,
@@ -1097,50 +1093,28 @@
             water: 0.152
         };
 
-        // ==========================================
-        // 2. FIREBASE INITIALIZATION (USER CUSTOM PROJECT CONFIG)
-        // ==========================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyDPP9x3aYxgBz51CRRu7AseEVBLGqztpD8",
-            authDomain: "a01-low-carbon-management.firebaseapp.com",
-            projectId: "a01-low-carbon-management",
-            storageBucket: "a01-low-carbon-management.firebasestorage.app",
-            messagingSenderId: "90010133926",
-            appId: "1:90010133926:web:784d755325c25d9af31b67",
-            measurementId: "G-KKQ7J1VRTW"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'standalone-1-90010133926-web';
-        const isCloudReady = true;
-
         // Application State
         let currentUser = null;
+        let isLoginMode = true;
         let venues = [];
         let currentVenueId = null;
         let allInventories = [];
-        let summaryItems = []; // 盤查清冊總表 (Summary) 項目清單
-        let elecBills = [];
-        let gasBills = [];
+        let summaryItems = []; // Inventory Summary rows (盤查清冊總表)
+        let elecBills = [];    // Electricity monthly ledger rows
+        let gasBills = [];     // Gas monthly ledger rows
         let currentMonth = "";
         let isNewVenueCreating = false;
-        let isLoginMode = true;
+        let currentAIReportData = null;
 
         // Chart Instances
         let splitChartInst = null;
         let trendChartInst = null;
         let hotspotBarChartInst = null;
-        let chartsInitialized = false;
 
         // DOM Elements Cache
         const els = {
-            loadingScreen: document.getElementById('loadingScreen'),
             loginScreen: document.getElementById('loginScreen'),
             mainAppContainer: document.getElementById('mainAppContainer'),
-
-            // Login UI
             tabLoginMode: document.getElementById('tabLoginMode'),
             tabRegisterMode: document.getElementById('tabRegisterMode'),
             loginErrorBox: document.getElementById('loginErrorBox'),
@@ -1199,6 +1173,7 @@
             btnToggleEntry: document.getElementById('btnToggleEntry'),
             leftPanel: document.getElementById('leftPanel'),
             btnTriggerAI: document.getElementById('btnTriggerAI'),
+            btnDownloadAIReport: document.getElementById('btnDownloadAIReport'),
             aiPlaceholder: document.getElementById('aiPlaceholder'),
             aiLoading: document.getElementById('aiLoading'),
             aiResult: document.getElementById('aiResult'),
@@ -1210,100 +1185,22 @@
         };
 
         // ==========================================
-        // 3. LOGIN / REGISTER AUTHENTICATION LOGIC
+        // 3. UI HELPERS & PRO-RATA DATE CALCULATION
         // ==========================================
-        function showLoginError(msg) {
-            if (!msg) {
-                els.loginErrorBox.classList.add('hidden');
-                els.loginErrorBox.textContent = '';
-            } else {
-                els.loginErrorBox.textContent = msg;
-                els.loginErrorBox.classList.remove('hidden');
-            }
+        // 國際盤查標準數值格式化：完整保留原始小數位數 (不無條件捨去活動數據)
+        function formatExactNum(val, maxDec = 6) {
+            const num = Number(val);
+            if (isNaN(num)) return '0';
+            if (Number.isInteger(num)) return num.toLocaleString('en-US');
+            return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: maxDec });
         }
 
-        function setAuthLoading(loading) {
-            els.btnSubmitEmailAuth.disabled = loading;
-            els.btnGoogleLogin.disabled = loading;
-            els.btnSubmitEmailAuth.textContent = loading ? '處理中...' : (isLoginMode ? '登入系統' : '註冊帳號');
+        // 國際 GHG 盤查排放量標準：統一呈現小數點後 4 位 (0.0000)
+        function formatCo2e(val, dec = 4) {
+            const num = Number(val) || 0;
+            return num.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
         }
 
-        function setupAuthUIEvents() {
-            els.tabLoginMode.addEventListener('click', () => {
-                isLoginMode = true;
-                showLoginError(null);
-                els.tabLoginMode.className = 'flex-1 pb-2 font-bold text-sm text-center border-b-2 transition-colors border-emerald-500 text-emerald-600';
-                els.tabRegisterMode.className = 'flex-1 pb-2 font-bold text-sm text-center border-b-2 transition-colors border-transparent text-slate-500 hover:text-slate-700';
-                els.btnSubmitEmailAuth.textContent = '登入系統';
-            });
-
-            els.tabRegisterMode.addEventListener('click', () => {
-                isLoginMode = false;
-                showLoginError(null);
-                els.tabRegisterMode.className = 'flex-1 pb-2 font-bold text-sm text-center border-b-2 transition-colors border-emerald-500 text-emerald-600';
-                els.tabLoginMode.className = 'flex-1 pb-2 font-bold text-sm text-center border-b-2 transition-colors border-transparent text-slate-500 hover:text-slate-700';
-                els.btnSubmitEmailAuth.textContent = '註冊帳號';
-            });
-
-            els.emailAuthForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                showLoginError(null);
-                const email = els.loginEmailInput.value.trim();
-                const password = els.loginPasswordInput.value;
-                setAuthLoading(true);
-                try {
-                    if (isLoginMode) {
-                        await signInWithEmailAndPassword(auth, email, password);
-                    } else {
-                        await createUserWithEmailAndPassword(auth, email, password);
-                    }
-                } catch (err) {
-                    if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-                        showLoginError("帳號或密碼錯誤，請重新輸入。");
-                    } else if (err.code === 'auth/email-already-in-use') {
-                        showLoginError("此信箱已被註冊，請直接登入。");
-                    } else if (err.code === 'auth/weak-password') {
-                        showLoginError("密碼強度不足，請至少輸入 6 個字元。");
-                    } else if (err.code === 'auth/unauthorized-domain') {
-                        showLoginError(`網域未授權！請至 Firebase 控制台 > Authentication > 設定 > 授權網域，新增此網域：「${window.location.hostname}」`);
-                    } else {
-                        showLoginError("發生錯誤：" + err.message);
-                    }
-                } finally {
-                    setAuthLoading(false);
-                }
-            });
-
-            els.btnGoogleLogin.addEventListener('click', async () => {
-                showLoginError(null);
-                setAuthLoading(true);
-                try {
-                    const provider = new GoogleAuthProvider();
-                    await signInWithPopup(auth, provider);
-                } catch (err) {
-                    if (err.code === 'auth/unauthorized-domain') {
-                        showLoginError(`網域未授權！請至 Firebase 控制台 > Authentication > 設定 > 授權網域，新增此網域：「${window.location.hostname}」`);
-                    } else if (err.code !== 'auth/popup-closed-by-user') {
-                        showLoginError("Google 登入失敗：" + err.message);
-                    }
-                } finally {
-                    setAuthLoading(false);
-                }
-            });
-
-            els.btnLogout.addEventListener('click', async () => {
-                try {
-                    await signOut(auth);
-                    showToast("已安全登出系統");
-                } catch (e) {
-                    console.error("Logout error:", e);
-                }
-            });
-        }
-
-        // ==========================================
-        // 4. UI HELPERS & PRO-RATA DATE CALCULATION
-        // ==========================================
         function showToast(msg, type = 'success') {
             els.toastMsg.textContent = msg;
             els.toastIcon.className = type === 'success'
@@ -1350,7 +1247,7 @@
         }
 
         // ==========================================
-        // 5. PRECISION CARBON CALCULATION ENGINE
+        // 4. PRECISION CARBON CALCULATION ENGINE
         // ==========================================
         function calculateEmissions() {
             const gasM3 = Math.max(0, parseFloat(els.inGas.value) || 0);
@@ -1377,13 +1274,13 @@
             const totalKg = scope1Kg + scope2Kg + (includeWater ? waterKg : 0);
             const totalTons = totalKg / 1000;
 
-            els.gasCo2Val.textContent = gasCo2Kg.toFixed(2);
-            els.gasCh4Val.textContent = gasCh4KgCo2e.toFixed(3);
-            els.gasN2oVal.textContent = gasN2oKgCo2e.toFixed(3);
+            els.gasCo2Val.textContent = formatCo2e(gasCo2Kg, 4);
+            els.gasCh4Val.textContent = formatCo2e(gasCh4KgCo2e, 4);
+            els.gasN2oVal.textContent = formatCo2e(gasN2oKgCo2e, 4);
 
-            els.dieselCo2Val.textContent = dieselCo2Kg.toFixed(2);
-            els.dieselCh4Val.textContent = dieselCh4KgCo2e.toFixed(3);
-            els.dieselN2oVal.textContent = dieselN2oKgCo2e.toFixed(3);
+            els.dieselCo2Val.textContent = formatCo2e(dieselCo2Kg, 4);
+            els.dieselCh4Val.textContent = formatCo2e(dieselCh4KgCo2e, 4);
+            els.dieselN2oVal.textContent = formatCo2e(dieselN2oKgCo2e, 4);
 
             const splits = {
                 pool: parseInt(els.slPool.value) || 0,
@@ -1440,20 +1337,20 @@
         function updateDashboardUI() {
             const calc = calculateEmissions();
 
-            els.kpiTotal.textContent = calc.totalTons.toFixed(2);
-            els.kpiTotalKgSub.textContent = `約 ${Math.round(calc.totalKg).toLocaleString()} kgCO₂e`;
+            els.kpiTotal.textContent = formatCo2e(calc.totalTons, 4);
+            els.kpiTotalKgSub.textContent = `約 ${formatCo2e(calc.totalKg, 4)} kgCO₂e`;
 
-            els.kpiScope1.textContent = Math.round(calc.scope1Kg).toLocaleString();
-            const s1Pct = calc.totalKg > 0 ? (calc.scope1Kg / calc.totalKg * 100).toFixed(1) : '0.0';
+            els.kpiScope1.textContent = formatCo2e(calc.scope1Kg, 4);
+            const s1Pct = calc.totalKg > 0 ? (calc.scope1Kg / calc.totalKg * 100).toFixed(2) : '0.00';
             els.kpiScope1Pct.textContent = `佔總排放 ${s1Pct}%`;
 
-            els.kpiScope2.textContent = Math.round(calc.scope2Kg).toLocaleString();
-            const s2Pct = calc.totalKg > 0 ? (calc.scope2Kg / calc.totalKg * 100).toFixed(1) : '0.0';
+            els.kpiScope2.textContent = formatCo2e(calc.scope2Kg, 4);
+            const s2Pct = calc.totalKg > 0 ? (calc.scope2Kg / calc.totalKg * 100).toFixed(2) : '0.00';
             els.kpiScope2Pct.textContent = `佔總排放 ${s2Pct}%`;
 
             els.kpiHotspot.textContent = calc.hotspotName;
             els.kpiHotspotSub.textContent = calc.totalTons > 0
-                ? `預估貢獻 ${calc.hotspotTons.toFixed(2)} tCO₂e/月`
+                ? `預估貢獻 ${formatCo2e(calc.hotspotTons, 4)} tCO₂e/月`
                 : '請於左側輸入能源度數';
 
             renderGhgDetailTable(calc);
@@ -1465,39 +1362,39 @@
             const rows = [
                 {
                     label: '範疇一｜天然氣鍋爐 (m³)',
-                    usage: `${calc.data.gasM3.toLocaleString()} m³`,
-                    co2: calc.gas.co2.toFixed(2),
-                    ch4: calc.gas.ch4.toFixed(3),
-                    n2o: calc.gas.n2o.toFixed(3),
-                    tons: (calc.gas.totalKg / 1000).toFixed(3),
-                    pct: calc.totalKg > 0 ? (calc.gas.totalKg / denom * 100).toFixed(1) + '%' : '0.0%'
+                    usage: `${formatExactNum(calc.data.gasM3)} m³`,
+                    co2: formatCo2e(calc.gas.co2, 4),
+                    ch4: formatCo2e(calc.gas.ch4, 4),
+                    n2o: formatCo2e(calc.gas.n2o, 4),
+                    tons: formatCo2e(calc.gas.totalKg / 1000, 4),
+                    pct: calc.totalKg > 0 ? (calc.gas.totalKg / denom * 100).toFixed(2) + '%' : '0.00%'
                 },
                 {
                     label: '範疇一｜緊急發電機柴油 (L)',
-                    usage: `${calc.data.dieselL.toLocaleString()} L`,
-                    co2: calc.diesel.co2.toFixed(2),
-                    ch4: calc.diesel.ch4.toFixed(3),
-                    n2o: calc.diesel.n2o.toFixed(3),
-                    tons: (calc.diesel.totalKg / 1000).toFixed(3),
-                    pct: calc.totalKg > 0 ? (calc.diesel.totalKg / denom * 100).toFixed(1) + '%' : '0.0%'
+                    usage: `${formatExactNum(calc.data.dieselL)} L`,
+                    co2: formatCo2e(calc.diesel.co2, 4),
+                    ch4: formatCo2e(calc.diesel.ch4, 4),
+                    n2o: formatCo2e(calc.diesel.n2o, 4),
+                    tons: formatCo2e(calc.diesel.totalKg / 1000, 4),
+                    pct: calc.totalKg > 0 ? (calc.diesel.totalKg / denom * 100).toFixed(2) + '%' : '0.00%'
                 },
                 {
                     label: `範疇二｜外購電力 (係數 ${calc.elecFactor})`,
-                    usage: `${calc.data.elecKwh.toLocaleString()} kWh`,
-                    co2: calc.scope2Kg.toFixed(2),
+                    usage: `${formatExactNum(calc.data.elecKwh)} kWh`,
+                    co2: formatCo2e(calc.scope2Kg, 4),
                     ch4: '-',
                     n2o: '-',
-                    tons: (calc.scope2Kg / 1000).toFixed(3),
-                    pct: calc.totalKg > 0 ? (calc.scope2Kg / denom * 100).toFixed(1) + '%' : '0.0%'
+                    tons: formatCo2e(calc.scope2Kg / 1000, 4),
+                    pct: calc.totalKg > 0 ? (calc.scope2Kg / denom * 100).toFixed(2) + '%' : '0.00%'
                 },
                 {
                     label: `資源耗用｜自來水 ${calc.includeWater ? '(已計入)' : '(未計入總量)'}`,
-                    usage: `${calc.data.waterM3.toLocaleString()} m³`,
-                    co2: calc.waterKg.toFixed(2),
+                    usage: `${formatExactNum(calc.data.waterM3)} m³`,
+                    co2: formatCo2e(calc.waterKg, 4),
                     ch4: '-',
                     n2o: '-',
-                    tons: (calc.waterKg / 1000).toFixed(3),
-                    pct: (calc.totalKg > 0 && calc.includeWater) ? (calc.waterKg / denom * 100).toFixed(1) + '%' : '0.0%'
+                    tons: formatCo2e(calc.waterKg / 1000, 4),
+                    pct: (calc.totalKg > 0 && calc.includeWater) ? (calc.waterKg / denom * 100).toFixed(2) + '%' : '0.00%'
                 }
             ];
 
@@ -1515,22 +1412,19 @@
                 <tr class="bg-emerald-50/70 font-bold text-slate-800 border-t-2 border-emerald-200">
                     <td class="py-2.5 px-3 font-sans">合計總排放量</td>
                     <td class="py-2.5 px-3 text-right">-</td>
-                    <td class="py-2.5 px-3 text-right">${(calc.gas.co2 + calc.diesel.co2 + calc.scope2Kg + (calc.includeWater ? calc.waterKg : 0)).toFixed(2)}</td>
-                    <td class="py-2.5 px-3 text-right">${(calc.gas.ch4 + calc.diesel.ch4).toFixed(3)}</td>
-                    <td class="py-2.5 px-3 text-right">${(calc.gas.n2o + calc.diesel.n2o).toFixed(3)}</td>
-                    <td class="py-2.5 px-3 text-right text-primary text-sm">${calc.totalTons.toFixed(3)} t</td>
-                    <td class="py-2.5 px-3 text-right text-primary">100.0%</td>
+                    <td class="py-2.5 px-3 text-right">${formatCo2e(calc.gas.co2 + calc.diesel.co2 + calc.scope2Kg + (calc.includeWater ? calc.waterKg : 0), 4)}</td>
+                    <td class="py-2.5 px-3 text-right">${formatCo2e(calc.gas.ch4 + calc.diesel.ch4, 4)}</td>
+                    <td class="py-2.5 px-3 text-right">${formatCo2e(calc.gas.n2o + calc.diesel.n2o, 4)}</td>
+                    <td class="py-2.5 px-3 text-right text-primary text-sm">${formatCo2e(calc.totalTons, 4)} t</td>
+                    <td class="py-2.5 px-3 text-right text-primary">100.00%</td>
                 </tr>
             `;
         }
 
         // ==========================================
-        // 6. CHARTS INITIALIZATION & UPDATES
+        // 5. CHARTS INITIALIZATION & UPDATES
         // ==========================================
         function initCharts() {
-            if (chartsInitialized) return;
-            chartsInitialized = true;
-
             Chart.defaults.font.family = "'Inter', 'PingFang TC', sans-serif";
             Chart.defaults.color = '#64748b';
 
@@ -1615,10 +1509,10 @@
             splitChartInst.update();
 
             const items = [
-                { label: '泳池加熱', tons: +(calc.totalTons * calc.splits.pool / 100).toFixed(2), color: '#f43f5e' },
-                { label: '中央空調', tons: +(calc.totalTons * calc.splits.hvac / 100).toFixed(2), color: '#3b82f6' },
-                { label: '高天井照明', tons: +(calc.totalTons * calc.splits.light / 100).toFixed(2), color: '#f59e0b' },
-                { label: '一般動力', tons: +(calc.totalTons * calc.splits.gen / 100).toFixed(2), color: '#94a3b8' }
+                { label: '泳池加熱', tons: +(calc.totalTons * calc.splits.pool / 100).toFixed(4), color: '#f43f5e' },
+                { label: '中央空調', tons: +(calc.totalTons * calc.splits.hvac / 100).toFixed(4), color: '#3b82f6' },
+                { label: '高天井照明', tons: +(calc.totalTons * calc.splits.light / 100).toFixed(4), color: '#f59e0b' },
+                { label: '一般動力', tons: +(calc.totalTons * calc.splits.gen / 100).toFixed(4), color: '#94a3b8' }
             ].sort((a, b) => b.tons - a.tons);
 
             hotspotBarChartInst.data.labels = items.map(i => i.label);
@@ -1650,7 +1544,7 @@
             trendChartInst.data.datasets = [
                 {
                     label: '總碳排量 (tCO₂e)',
-                    data: recent.map(r => +(r.calculatedEmissions?.totalTons || 0).toFixed(2)),
+                    data: recent.map(r => +(r.calculatedEmissions?.totalTons || 0).toFixed(4)),
                     borderColor: '#059669',
                     backgroundColor: 'rgba(5, 150, 105, 0.12)',
                     fill: true,
@@ -1663,9 +1557,145 @@
         }
 
         // ==========================================
-        // 7. BILLING LEDGERS (ELECTRICITY & GAS SHEETS)
+        // 6. INVENTORY SUMMARY & BILLING LEDGERS
         // ==========================================
+        function getAutoAggregatedSummaryForVenue(venueId) {
+            const venueRecords = allInventories.filter(r => r.venueId === venueId);
+            if (venueRecords.length === 0) return [];
+
+            let sumGas = 0, sumGasTons = 0;
+            let sumDiesel = 0, sumDieselTons = 0;
+            let sumElec = 0, sumElecTons = 0;
+            let sumWater = 0, sumWaterTons = 0;
+
+            venueRecords.forEach(r => {
+                const g = Number(r.activityData?.naturalGasM3 || 0);
+                const d = Number(r.activityData?.dieselLiter || 0);
+                const e = Number(r.activityData?.electricityKwh || 0);
+                const w = Number(r.activityData?.waterM3 || 0);
+                const ef = Number(r.emissionFactors?.electricity || 0.466);
+
+                sumGas += g;
+                sumGasTons += (g * PRECISION_FACTORS.naturalGas.totalCo2e) / 1000;
+                sumDiesel += d;
+                sumDieselTons += (d * PRECISION_FACTORS.diesel.totalCo2e) / 1000;
+                sumElec += e;
+                sumElecTons += (e * ef) / 1000;
+                sumWater += w;
+                sumWaterTons += (w * PRECISION_FACTORS.water) / 1000;
+            });
+
+            const list = [];
+            if (sumGas > 0) {
+                list.push({
+                    id: 'auto_gas', isAuto: true, scope: '範疇一', sourceName: '熱水鍋爐設備',
+                    material: '天然氣', activityValue: sumGas, unit: 'm³',
+                    factor: +PRECISION_FACTORS.naturalGas.totalCo2e.toFixed(6), co2eTons: sumGasTons, note: '各月填報自動彙整'
+                });
+            }
+            if (sumDiesel > 0) {
+                list.push({
+                    id: 'auto_diesel', isAuto: true, scope: '範疇一', sourceName: '緊急發電機組',
+                    material: '柴油', activityValue: sumDiesel, unit: 'L',
+                    factor: +PRECISION_FACTORS.diesel.totalCo2e.toFixed(6), co2eTons: sumDieselTons, note: '各月填報自動彙整'
+                });
+            }
+            if (sumElec > 0) {
+                list.push({
+                    id: 'auto_elec', isAuto: true, scope: '範疇二', sourceName: '全館用電設備',
+                    material: '外購電力', activityValue: sumElec, unit: 'kWh',
+                    factor: +(parseFloat(els.customElecFactor.value) || 0.466), co2eTons: sumElecTons, note: '各月填報自動彙整'
+                });
+            }
+            if (sumWater > 0) {
+                list.push({
+                    id: 'auto_water', isAuto: true, scope: '範疇三', sourceName: '全館用水設施',
+                    material: '自來水', activityValue: sumWater, unit: 'm³',
+                    factor: PRECISION_FACTORS.water, co2eTons: sumWaterTons, note: '各月填報自動彙整'
+                });
+            }
+            return list;
+        }
+
+        function renderSummaryLedger() {
+            const venue = venues.find(v => v.id === currentVenueId) || { floorArea: 10000 };
+            let rows = summaryItems.filter(s => s.venueId === currentVenueId);
+
+            if (rows.length === 0) {
+                rows = getAutoAggregatedSummaryForVenue(currentVenueId);
+            }
+
+            document.getElementById('summaryBadgeCount').textContent = rows.length;
+
+            let s1Tons = 0, s2Tons = 0, s3Tons = 0;
+            rows.forEach(item => {
+                const tons = Number(item.co2eTons) || 0;
+                if (item.scope.includes('一') || item.scope.includes('1')) s1Tons += tons;
+                else if (item.scope.includes('二') || item.scope.includes('2')) s2Tons += tons;
+                else s3Tons += tons;
+            });
+
+            const totalAll = s1Tons + s2Tons + s3Tons;
+            const floorArea = Number(venue.floorArea) || 0;
+            const intensity = floorArea > 0 ? (totalAll * 1000 / floorArea) : 0;
+
+            document.getElementById('sumTotalAllTons').textContent = formatCo2e(totalAll, 4);
+            document.getElementById('sumFloorIntensity').textContent = `單位面積排放強度：${formatCo2e(intensity, 4)} kgCO₂e/m²`;
+
+            document.getElementById('sumScope1Tons').textContent = formatCo2e(s1Tons, 4);
+            document.getElementById('sumScope1Pct').textContent = totalAll > 0 ? (s1Tons / totalAll * 100).toFixed(2) + '%' : '0.00%';
+
+            document.getElementById('sumScope2Tons').textContent = formatCo2e(s2Tons, 4);
+            document.getElementById('sumScope2Pct').textContent = totalAll > 0 ? (s2Tons / totalAll * 100).toFixed(2) + '%' : '0.00%';
+
+            document.getElementById('sumScope3Tons').textContent = formatCo2e(s3Tons, 4);
+            document.getElementById('sumScope3Pct').textContent = totalAll > 0 ? (s3Tons / totalAll * 100).toFixed(2) + '%' : '0.00%';
+
+            const tbody = document.getElementById('summaryLedgerBody');
+            if (rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10" class="py-8 text-center text-slate-400">尚無盤查清冊總表資料，請匯入包含「Summary」之 Excel 報告總表或點擊「新增清冊排放源」</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = rows.map(item => {
+                const pct = totalAll > 0 ? (item.co2eTons / totalAll * 100).toFixed(2) : '0.00';
+                const scopeBadge = item.scope.includes('一') || item.scope.includes('1')
+                    ? 'bg-amber-100 text-amber-800 border-amber-200'
+                    : (item.scope.includes('二') || item.scope.includes('2')
+                        ? 'bg-blue-100 text-blue-800 border-blue-200'
+                        : 'bg-purple-100 text-purple-800 border-purple-200');
+
+                const actionHtml = item.isAuto
+                    ? `<span class="text-[10px] text-slate-400">自動彙整</span>`
+                    : `<button onclick="window.editSummaryRow('${item.id}')" class="text-emerald-600 hover:underline mr-2">編輯</button>
+                       <button onclick="window.deleteSummaryRow('${item.id}')" class="text-rose-500 hover:underline">刪除</button>`;
+
+                return `
+                    <tr class="hover:bg-slate-50 font-mono">
+                        <td class="py-2 px-3 font-sans">${actionHtml}</td>
+                        <td class="py-2 px-3 font-sans"><span class="px-2 py-0.5 rounded border text-[11px] font-semibold ${scopeBadge}">${item.scope}</span></td>
+                        <td class="py-2 px-3 font-sans font-semibold text-slate-800">${item.sourceName}</td>
+                        <td class="py-2 px-3 font-sans text-slate-700">${item.material}</td>
+                        <td class="py-2 px-3 text-right text-slate-700">${formatExactNum(item.activityValue)}</td>
+                        <td class="py-2 px-3 font-sans text-slate-500">${item.unit}</td>
+                        <td class="py-2 px-3 text-right text-slate-600">${formatExactNum(item.factor, 6)}</td>
+                        <td class="py-2 px-3 text-right bg-emerald-50/40 font-bold text-emerald-800">${formatCo2e(item.co2eTons, 4)}</td>
+                        <td class="py-2 px-3 text-right bg-emerald-50/40 text-emerald-700 font-semibold">${pct}%</td>
+                        <td class="py-2 px-3 font-sans text-slate-500">${item.note || '-'}</td>
+                    </tr>
+                `;
+            }).join('') + `
+                <tr class="bg-slate-100 font-bold text-slate-800 border-t-2 border-slate-300 font-mono">
+                    <td colspan="7" class="py-2.5 px-3 font-sans text-right">盤查清冊年度總計</td>
+                    <td class="py-2.5 px-3 text-right text-primary text-sm">${formatCo2e(totalAll, 4)} t</td>
+                    <td class="py-2.5 px-3 text-right text-primary">100.00%</td>
+                    <td></td>
+                </tr>
+            `;
+        }
+
         function renderLedgers() {
+            renderSummaryLedger();
             const targetYear = parseInt(document.getElementById('elecInventoryYear').value) || new Date().getFullYear();
 
             const venueElec = elecBills.filter(b => b.venueId === currentVenueId).sort((a, b) => (a.billMonth || '').localeCompare(b.billMonth || ''));
@@ -1715,7 +1745,7 @@
             document.getElementById('elecSumTotalKwh').textContent = `${sumTotalKwh.toLocaleString()} kWh`;
             document.getElementById('elecSumRecogKwh').textContent = `${sumRecogKwh.toLocaleString()} kWh`;
             document.getElementById('elecSumRecogAmt').textContent = `NT$ ${sumRecogAmt.toLocaleString()}`;
-            document.getElementById('elecSumCo2Tons').textContent = `${(sumRecogKwh * elecFactor / 1000).toFixed(2)} tCO₂e`;
+            document.getElementById('elecSumCo2Tons').textContent = `${formatCo2e(sumRecogKwh * elecFactor / 1000, 4)} tCO₂e`;
 
             const venueGas = gasBills.filter(b => b.venueId === currentVenueId).sort((a, b) => (a.billMonth || '').localeCompare(b.billMonth || ''));
             document.getElementById('gasBadgeCount').textContent = venueGas.length;
@@ -1728,7 +1758,7 @@
             } else {
                 gasBody.innerHTML = venueGas.map(b => {
                     const pr = calculateProRataDays(b.periodStart, b.periodEnd, targetYear);
-                    const recogM3 = +( (b.usage || 0) * pr.ratio ).toFixed(1);
+                    const recogM3 = +( (b.usage || 0) * pr.ratio ).toFixed(2);
                     const recogAmt = Math.round((b.amount || 0) * pr.ratio);
                     sumTotalM3 += (b.usage || 0);
                     sumRecogM3 += recogM3;
@@ -1745,10 +1775,10 @@
                             <td class="py-2 px-3 font-bold text-slate-700">${b.billMonth || '-'}</td>
                             <td class="py-2 px-3">${b.periodStart || '-'}</td>
                             <td class="py-2 px-3">${b.periodEnd || '-'}</td>
-                            <td class="py-2 px-3 text-right font-semibold">${(b.usage || 0).toLocaleString()}</td>
+                            <td class="py-2 px-3 text-right font-semibold">${formatExactNum(b.usage || 0)}</td>
                             <td class="py-2 px-3 text-right">${(b.amount || 0).toLocaleString()}</td>
                             <td class="py-2 px-3 text-right bg-amber-50/40">${pr.recognizedDays}/${pr.totalDays}</td>
-                            <td class="py-2 px-3 text-right bg-amber-50/40 font-bold text-amber-700">${recogM3.toLocaleString()}</td>
+                            <td class="py-2 px-3 text-right bg-amber-50/40 font-bold text-amber-700">${formatExactNum(recogM3)}</td>
                             <td class="py-2 px-3 text-right bg-amber-50/40">${recogAmt.toLocaleString()}</td>
                             <td class="py-2 px-3 font-sans text-slate-500">${b.source || '天然氣帳單'}</td>
                             <td class="py-2 px-3 text-center font-sans">${b.verified ? '<span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold">OK</span>' : '-'}</td>
@@ -1757,171 +1787,10 @@
                 }).join('');
             }
 
-            document.getElementById('gasSumTotalM3').textContent = `${sumTotalM3.toLocaleString()} m³`;
-            document.getElementById('gasSumRecogM3').textContent = `${sumRecogM3.toLocaleString()} m³`;
+            document.getElementById('gasSumTotalM3').textContent = `${formatExactNum(sumTotalM3)} m³`;
+            document.getElementById('gasSumRecogM3').textContent = `${formatExactNum(sumRecogM3)} m³`;
             document.getElementById('gasSumRecogAmt').textContent = `NT$ ${sumGasAmt.toLocaleString()}`;
-            document.getElementById('gasSumCo2Tons').textContent = `${(sumRecogM3 * PRECISION_FACTORS.naturalGas.totalCo2e / 1000).toFixed(2)} tCO₂e`;
-        }
-
-        // ==========================================
-        // 7.5 INVENTORY SUMMARY TABLE (盤查清冊總表)
-        // ==========================================
-        function getEffectiveSummaryItems() {
-            const explicit = summaryItems.filter(item => item.venueId === currentVenueId);
-            if (explicit.length > 0) return explicit;
-
-            // Auto-derive live Summary items from saved monthly inventories or current engine if no imported summary rows exist yet
-            const venueInvs = allInventories.filter(inv => inv.venueId === currentVenueId);
-            const calc = calculateEmissions();
-            const elecFactor = parseFloat(els.customElecFactor.value) || 0.466;
-
-            let totalGas = 0, totalDiesel = 0, totalElec = 0, totalWater = 0;
-            if (venueInvs.length > 0) {
-                venueInvs.forEach(inv => {
-                    totalGas += Number(inv.activityData?.naturalGasM3 || 0);
-                    totalDiesel += Number(inv.activityData?.dieselLiter || 0);
-                    totalElec += Number(inv.activityData?.electricityKwh || 0);
-                    totalWater += Number(inv.activityData?.waterM3 || 0);
-                });
-            } else {
-                totalGas = calc.data.gasM3;
-                totalDiesel = calc.data.dieselL;
-                totalElec = calc.data.elecKwh;
-                totalWater = calc.data.waterM3;
-            }
-
-            const derived = [];
-            if (totalGas > 0) {
-                derived.push({
-                    id: 'auto_gas',
-                    isAutoDerived: true,
-                    scope: '範疇一 (直接排放)',
-                    sourceName: '泳池加熱鍋爐 / 燃氣設備',
-                    material: '天然氣',
-                    activityValue: totalGas,
-                    unit: 'm³',
-                    factor: +PRECISION_FACTORS.naturalGas.totalCo2e.toFixed(4),
-                    co2eTons: +(totalGas * PRECISION_FACTORS.naturalGas.totalCo2e / 1000).toFixed(3),
-                    note: venueInvs.length > 0 ? `系統自動彙整 (${venueInvs.length} 個月紀錄)` : '即時試算預覽'
-                });
-            }
-            if (totalDiesel > 0) {
-                derived.push({
-                    id: 'auto_diesel',
-                    isAutoDerived: true,
-                    scope: '範疇一 (直接排放)',
-                    sourceName: '緊急發電機組',
-                    material: '柴油',
-                    activityValue: totalDiesel,
-                    unit: 'L',
-                    factor: +PRECISION_FACTORS.diesel.totalCo2e.toFixed(4),
-                    co2eTons: +(totalDiesel * PRECISION_FACTORS.diesel.totalCo2e / 1000).toFixed(3),
-                    note: venueInvs.length > 0 ? `系統自動彙整 (${venueInvs.length} 個月紀錄)` : '即時試算預覽'
-                });
-            }
-            if (totalElec > 0) {
-                derived.push({
-                    id: 'auto_elec',
-                    isAutoDerived: true,
-                    scope: '範疇二 (能源間接排放)',
-                    sourceName: '全館空調、泳池泵浦及照明電力',
-                    material: '外購電力 (台電)',
-                    activityValue: totalElec,
-                    unit: 'kWh',
-                    factor: elecFactor,
-                    co2eTons: +(totalElec * elecFactor / 1000).toFixed(3),
-                    note: venueInvs.length > 0 ? `系統自動彙整 (${venueInvs.length} 個月紀錄)` : '即時試算預覽'
-                });
-            }
-            if (totalWater > 0) {
-                derived.push({
-                    id: 'auto_water',
-                    isAutoDerived: true,
-                    scope: '範疇三 (其他間接排放)',
-                    sourceName: '泳池補水及淋浴盥洗用水',
-                    material: '自來水',
-                    activityValue: totalWater,
-                    unit: 'm³',
-                    factor: PRECISION_FACTORS.water,
-                    co2eTons: +(totalWater * PRECISION_FACTORS.water / 1000).toFixed(3),
-                    note: venueInvs.length > 0 ? `系統自動彙整 (${venueInvs.length} 個月紀錄)` : '即時試算預覽'
-                });
-            }
-            return derived;
-        }
-
-        function renderSummaryTable() {
-            const items = getEffectiveSummaryItems();
-            document.getElementById('summaryBadgeCount').textContent = items.length;
-
-            let scope1Tons = 0, scope2Tons = 0, scope3Tons = 0;
-            items.forEach(item => {
-                const tons = Number(item.co2eTons) || 0;
-                const sc = String(item.scope || '');
-                if (sc.includes('一') || sc.includes('1')) scope1Tons += tons;
-                else if (sc.includes('二') || sc.includes('2')) scope2Tons += tons;
-                else scope3Tons += tons;
-            });
-
-            const totalTons = scope1Tons + scope2Tons + scope3Tons;
-            const venue = venues.find(v => v.id === currentVenueId) || { floorArea: 0 };
-            const intensity = venue.floorArea > 0 ? ((totalTons * 1000) / venue.floorArea).toFixed(2) : '0.00';
-
-            document.getElementById('sumTotalAllTons').textContent = totalTons.toFixed(3);
-            document.getElementById('sumFloorIntensity').textContent = `單位面積排放強度：${intensity} kgCO₂e/m²`;
-
-            document.getElementById('sumScope1Tons').textContent = scope1Tons.toFixed(3);
-            document.getElementById('sumScope1Pct').textContent = totalTons > 0 ? `${(scope1Tons / totalTons * 100).toFixed(1)}%` : '0.0%';
-
-            document.getElementById('sumScope2Tons').textContent = scope2Tons.toFixed(3);
-            document.getElementById('sumScope2Pct').textContent = totalTons > 0 ? `${(scope2Tons / totalTons * 100).toFixed(1)}%` : '0.0%';
-
-            document.getElementById('sumScope3Tons').textContent = scope3Tons.toFixed(3);
-            document.getElementById('sumScope3Pct').textContent = totalTons > 0 ? `${(scope3Tons / totalTons * 100).toFixed(1)}%` : '0.0%';
-
-            const tbody = document.getElementById('summaryTableBody');
-            if (items.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="py-8 text-center text-slate-400">尚無盤查清冊明細，請匯入包含 Summary 的 Excel 總表或點擊右上角「新增清冊排放源」</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = items.map(item => {
-                const tons = Number(item.co2eTons) || 0;
-                const pct = totalTons > 0 ? (tons / totalTons * 100).toFixed(1) + '%' : '0.0%';
-                const sc = String(item.scope || '');
-                const badgeClass = (sc.includes('一') || sc.includes('1'))
-                    ? 'bg-amber-50 text-amber-700 border-amber-200'
-                    : ((sc.includes('二') || sc.includes('2'))
-                        ? 'bg-blue-50 text-blue-700 border-blue-200'
-                        : 'bg-purple-50 text-purple-700 border-purple-200');
-
-                const actionBtns = item.isAutoDerived
-                    ? `<span class="text-[10px] text-slate-400 font-sans">自動彙整</span>`
-                    : `<button onclick="window.editSummaryItem('${item.id}')" class="text-emerald-600 hover:underline mr-2">編輯</button>
-                       <button onclick="window.deleteSummaryItem('${item.id}')" class="text-rose-500 hover:underline">刪除</button>`;
-
-                return `
-                    <tr class="hover:bg-slate-50 font-mono">
-                        <td class="py-2.5 px-3 font-sans">${actionBtns}</td>
-                        <td class="py-2.5 px-3 font-sans"><span class="px-2 py-0.5 rounded-full text-[11px] font-semibold border ${badgeClass}">${item.scope}</span></td>
-                        <td class="py-2.5 px-3 font-sans font-medium text-slate-800">${item.sourceName || '-'}</td>
-                        <td class="py-2.5 px-3 font-sans text-slate-700">${item.material || '-'}</td>
-                        <td class="py-2.5 px-3 text-right font-semibold">${Number(item.activityValue || 0).toLocaleString()}</td>
-                        <td class="py-2.5 px-3 font-sans text-slate-500">${item.unit || '-'}</td>
-                        <td class="py-2.5 px-3 text-right text-slate-600">${item.factor ?? '-'}</td>
-                        <td class="py-2.5 px-3 text-right bg-emerald-50/40 font-bold text-emerald-800">${tons.toFixed(3)}</td>
-                        <td class="py-2.5 px-3 text-right bg-emerald-50/40 font-semibold text-emerald-700">${pct}</td>
-                        <td class="py-2.5 px-3 font-sans text-slate-500">${item.note || '-'}</td>
-                    </tr>
-                `;
-            }).join('') + `
-                <tr class="bg-slate-800 text-white font-bold font-mono">
-                    <td colspan="7" class="py-3 px-3 font-sans text-right">盤查清冊總計 (Scope 1 + Scope 2 + Scope 3)</td>
-                    <td class="py-3 px-3 text-right text-emerald-400 text-sm">${totalTons.toFixed(3)} t</td>
-                    <td class="py-3 px-3 text-right text-emerald-400">100.0%</td>
-                    <td class="py-3 px-3 font-sans text-xs text-slate-300">共 ${items.length} 項排放源</td>
-                </tr>
-            `;
+            document.getElementById('gasSumCo2Tons').textContent = `${formatCo2e(sumRecogM3 * PRECISION_FACTORS.naturalGas.totalCo2e / 1000, 4)} tCO₂e`;
         }
 
         function syncLedgerMonthToEngine(type) {
@@ -1948,17 +1817,17 @@
                 }
                 const totalM3 = matching.reduce((acc, b) => {
                     const pr = calculateProRataDays(b.periodStart, b.periodEnd, targetYear);
-                    return acc + +((b.usage || 0) * pr.ratio).toFixed(1);
+                    return acc + +((b.usage || 0) * pr.ratio).toFixed(4);
                 }, 0);
                 els.inGas.value = totalM3;
                 updateDashboardUI();
                 setSyncStatus('unsaved');
-                showToast(`已帶入 ${currentMonth} 認列瓦斯 ${totalM3.toLocaleString()} m³`);
+                showToast(`已帶入 ${currentMonth} 認列瓦斯 ${formatExactNum(totalM3)} m³`);
             }
         }
 
         // ==========================================
-        // 8. EXCEL IMPORT / EXPORT / TEMPLATE (SheetJS)
+        // 7. EXCEL IMPORT / EXPORT / TEMPLATE (SheetJS + Auto Venue Creation + Summary)
         // ==========================================
         function exportStandardExcel() {
             if (typeof XLSX === 'undefined') {
@@ -1971,27 +1840,28 @@
             const wb = XLSX.utils.book_new();
 
             // --- Sheet 0: Summary (盤查清冊總表) ---
-            const currentSummary = getEffectiveSummaryItems();
-            const summaryHeader = ["範疇分類", "排放源 / 設施名稱", "原燃物料 / 活動項目", "年活動數據", "單位", "排放係數 (kgCO2e/單位)", "年排放量 (tCO2e)", "排放佔比 (%)", "數據來源 / 備註"];
-            const totalSumTons = currentSummary.reduce((acc, i) => acc + (Number(i.co2eTons) || 0), 0);
-            const summaryRows = currentSummary.map(item => {
-                const tons = Number(item.co2eTons) || 0;
-                const pct = totalSumTons > 0 ? +(tons / totalSumTons * 100).toFixed(2) : 0;
-                return [
-                    item.scope, item.sourceName, item.material, Number(item.activityValue || 0),
-                    item.unit, Number(item.factor || 0), tons, pct, item.note || ""
-                ];
-            });
-            const wsSummary = XLSX.utils.aoa_to_sheet([
-                [`${venue.name} - 溫室氣體盤查清冊報告總表 (Summary)`],
-                ["盤查年度", targetYear, "總排放量 (tCO2e)", +totalSumTons.toFixed(3)],
+            let sRows = summaryItems.filter(s => s.venueId === currentVenueId);
+            if (sRows.length === 0) sRows = getAutoAggregatedSummaryForVenue(currentVenueId);
+            const totalSummaryTons = sRows.reduce((acc, r) => acc + (Number(r.co2eTons) || 0), 0);
+
+            const summarySheetData = [
+                [`${venue.name} - 溫室氣體盤查清冊總表 (Summary)`],
+                ["盤查標準", "ISO 14064-1:2018 / 環境部溫室氣體排放係數管理表", "GWP版本", "IPCC-AR6 IPCC第六次評估報告(2021)"],
                 [],
-                summaryHeader,
-                ...summaryRows
-            ]);
-            wsSummary['!cols'] = [{ wch: 22 }, { wch: 26 }, { wch: 22 }, { wch: 16 }, { wch: 10 }, { wch: 20 }, { wch: 18 }, { wch: 14 }, { wch: 28 }];
+                ["盤查範疇", "排放源 / 設備名稱", "原燃物料 / 能源種類", "年度活動數據", "單位", "排放係數 (kgCO2e/單位)", "總排放量 (tCO2e)", "排放占比 (%)", "資料來源 / 備註"],
+                ...sRows.map(r => [
+                    r.scope, r.sourceName, r.material, r.activityValue, r.unit, r.factor,
+                    +(Number(r.co2eTons || 0).toFixed(4)),
+                    totalSummaryTons > 0 ? +((r.co2eTons / totalSummaryTons * 100).toFixed(2)) : 0,
+                    r.note || ""
+                ]),
+                ["合計", "全館溫室氣體排放總計", "", "", "", "", +(totalSummaryTons.toFixed(4)), 100.00, ""]
+            ];
+            const wsSummary = XLSX.utils.aoa_to_sheet(summarySheetData);
+            wsSummary['!cols'] = [{ wch: 14 }, { wch: 24 }, { wch: 22 }, { wch: 16 }, { wch: 10 }, { wch: 22 }, { wch: 18 }, { wch: 14 }, { wch: 26 }];
             XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
 
+            // --- Sheet 1: 基本資料 ---
             const sheet1Data = [
                 ["運動場館碳盤查簡易試算表單 - 基本資料表"],
                 ["系統匯出時間", new Date().toLocaleString('zh-TW')],
@@ -2013,6 +1883,7 @@
             ws1['!cols'] = [{ wch: 24 }, { wch: 45 }];
             XLSX.utils.book_append_sheet(wb, ws1, "基本資料");
 
+            // --- Sheet 2: 能資源碳排放統計 ---
             const sheet2Data = [
                 [`${venue.name} - ${currentMonth} 能資源碳排放統計表`],
                 ["範疇分類", "能源/資源項目", "活動數據", "單位", "CO2 排放係數", "CH4 係數 (GWP 27.9)", "N2O 係數 (GWP 273)", "CO2 排放量(kg)", "CH4 排放量(kgCO2e)", "N2O 排放量(kgCO2e)", "總排放量 (tCO2e)", "排放占比"],
@@ -2037,9 +1908,10 @@
             ws2['!cols'] = [{ wch: 20 }, { wch: 22 }, { wch: 14 }, { wch: 8 }, { wch: 15 }, { wch: 18 }, { wch: 18 }, { wch: 15 }, { wch: 18 }, { wch: 18 }, { wch: 16 }, { wch: 12 }];
             XLSX.utils.book_append_sheet(wb, ws2, "能資源碳排放統計");
 
+            // --- Sheet 3: 電費月記錄 ---
             const venueElec = elecBills.filter(b => b.venueId === currentVenueId);
             const sheet3Header = ["記帳日期", "用電種類", "電號", "帳單月份", "計費期間(起)", "計費期間(迄)", "經常(尖峰)度數", "週六半尖峰度數", "離峰度數", "用電度數(kWh)", "用電度數金額(元)", "認列天數", "認列度數(kWh)", "認列金額(元)", "資料來源", "核對確認"];
-            const sheet3Rows = venueElec.map((b) => {
+            const sheet3Rows = venueElec.map(b => {
                 const pr = calculateProRataDays(b.periodStart, b.periodEnd, targetYear);
                 return [
                     b.recordDate || "", b.elecType || "高壓需量綜合非營業用電", b.accountNo || "", b.billMonth || "",
@@ -2053,6 +1925,7 @@
             ws3['!cols'] = Array(16).fill({ wch: 16 });
             XLSX.utils.book_append_sheet(wb, ws3, "電費月記錄");
 
+            // --- Sheet 4: 瓦斯月記錄 ---
             const venueGas = gasBills.filter(b => b.venueId === currentVenueId);
             const sheet4Header = ["記帳日期", "用戶號", "帳單月份", "計費期間(起)", "計費期間(迄)", "用氣度數(m³)", "用氣度數金額(元)", "認列天數", "認列度數(m³)", "認列金額(元)", "資料來源", "核對確認"];
             const sheet4Rows = venueGas.map(b => {
@@ -2060,7 +1933,7 @@
                 return [
                     b.recordDate || "", b.accountNo || "", b.billMonth || "",
                     b.periodStart || "", b.periodEnd || "", b.usage || 0, b.amount || 0,
-                    pr.recognizedDays, +((b.usage || 0) * pr.ratio).toFixed(1), Math.round((b.amount || 0) * pr.ratio),
+                    pr.recognizedDays, +((b.usage || 0) * pr.ratio).toFixed(4), Math.round((b.amount || 0) * pr.ratio),
                     b.source || "天然氣帳單", b.verified ? "OK" : ""
                 ];
             });
@@ -2068,7 +1941,7 @@
             ws4['!cols'] = Array(12).fill({ wch: 16 });
             XLSX.utils.book_append_sheet(wb, ws4, "瓦斯月記錄");
 
-            const fileName = `${venue.name}_碳盤查簡易試算表單_${currentMonth}.xlsx`;
+            const fileName = `${venue.name}_碳盤查報告總表_${currentMonth}.xlsx`;
             XLSX.writeFile(wb, fileName);
             showToast(`已成功匯出：${fileName}`);
         }
@@ -2077,19 +1950,29 @@
             if (typeof XLSX === 'undefined') return;
             const wb = XLSX.utils.book_new();
 
+            const wsSummary = XLSX.utils.aoa_to_sheet([
+                ["運動場館溫室氣體盤查清冊總表 (Summary 空白範本)"],
+                ["盤查範疇", "排放源 / 設備名稱", "原燃物料 / 能源種類", "年度活動數據", "單位", "排放係數 (kgCO2e/單位)", "總排放量 (tCO2e)", "資料來源 / 備註"],
+                ["範疇一", "熱水鍋爐", "天然氣", 54000, "m³", 1.8809, 101.5686, "欣湖天然氣年度帳單"],
+                ["範疇一", "緊急發電機", "柴油", 120, "L", 2.6147, 0.3138, "發電機測試紀錄"],
+                ["範疇二", "全館空調與照明", "外購電力", 1450000, "kWh", 0.466, 675.7000, "台電年度電費單"],
+                ["範疇三", "全館淋浴與泳池補水", "自來水", 32000, "m³", 0.152, 4.8640, "自來水事業處水費單"]
+            ]);
+            XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
+
             const ws1 = XLSX.utils.aoa_to_sheet([
                 ["運動場館碳盤查簡易試算表單 - 基本資料表 (空白範本)"],
                 ["填寫說明", "請填入貴場館基本資料後，直接匯入《低碳管理系統》"],
                 [],
-                ["場館名稱", "範例國民運動中心"],
-                ["場館地址", "台北市信義區松勤街100號"],
-                ["統一編號", "12345678"],
-                ["代表人", "楊薇玉"],
+                ["場館名稱", "桃園市中壢國民運動中心"],
+                ["場館地址", "桃園市中壢區三光路350號"],
+                ["統一編號", "82910456"],
+                ["代表人", "王大明"],
                 ["聯絡人", "李廠務"],
-                ["聯絡電話", "02-2345-6789"],
-                ["聯絡傳真", "02-2345-6780"],
-                ["電子郵件", "facility@example.com"],
-                ["總樓地板面積 (m²)", 12500],
+                ["聯絡電話", "03-495-1930"],
+                ["聯絡傳真", "03-495-1931"],
+                ["電子郵件", "zhongli.ops@sportscenter.tw"],
+                ["總樓地板面積 (m²)", 14200],
                 ["泳池熱源類型", "溫水泳池(熱泵+天然氣輔助)"]
             ]);
             XLSX.utils.book_append_sheet(wb, ws1, "基本資料");
@@ -2112,11 +1995,11 @@
 
             const ws4 = XLSX.utils.aoa_to_sheet([
                 ["記帳日期", "用戶號", "帳單月份", "計費期間(起)", "計費期間(迄)", "用氣度數(m³)", "用氣度數金額(元)", "認列天數", "認列度數(m³)", "認列金額(元)", "資料來源", "核對確認"],
-                ["2026-03-18", "99887766", currentMonth, `${currentMonth}-01`, `${currentMonth}-28`, 4500, 67500, 28, 4500, 67500, "欣湖天然氣帳單", "OK"]
+                ["2026-03-18", "99887766", currentMonth, `${currentMonth}-01`, `${currentMonth}-28`, 4500, 67500, 28, 4500, 67500, "欣桃天然氣帳單", "OK"]
             ]);
             XLSX.utils.book_append_sheet(wb, ws4, "瓦斯月記錄");
 
-            XLSX.writeFile(wb, "運動場館碳盤查簡易試算表單_空白標準範本.xlsx");
+            XLSX.writeFile(wb, "運動場館碳盤查報告總表_空白標準範本.xlsx");
             showToast("已下載空白標準 Excel 範本");
         }
 
@@ -2137,224 +2020,222 @@
                     return String(val).trim().replace(/\//g, '-');
                 };
 
-                // 0. Extract fallback venue name from filename if needed (e.g., 盤查清冊_運動中心盤查報告總表_中壢20261118V1.xlsx)
-                let fileInferredName = '';
-                if (file.name.includes('中壢')) {
-                    fileInferredName = '桃園市中壢國民運動中心';
-                } else {
-                    const cleanBase = file.name.replace(/\.(xlsx|xls)$/i, '').split('_').pop() || '';
-                    const stripped = cleanBase.replace(/\d+.*$/, '').trim();
-                    if (stripped && stripped.length >= 2) {
-                        fileInferredName = stripped.includes('運動') ? stripped : `${stripped}國民運動中心`;
-                    }
-                }
-
-                // 1. Parse Sheet 1: 基本資料 (Auto-create new venue or match existing venue)
-                const s1Name = wb.SheetNames.find(n => n.includes('基本資料') || n.includes('場館'));
-                let importedVenueName = '';
-                const kv = {};
-
+                // ------------------------------------------------------------------
+                // 1. 智慧解析「基本資料」工作表或檔名，自動比對並新增場館 (例如中壢場館)
+                // ------------------------------------------------------------------
+                let extractedProfile = {};
+                const s1Name = wb.SheetNames.find(n => n.includes('基本資料') || n.includes('場館') || n.includes('組織'));
                 if (s1Name) {
                     const rows = XLSX.utils.sheet_to_json(wb.Sheets[s1Name], { header: 1 });
                     rows.forEach(r => {
                         if (!r) return;
                         for (let c = 0; c < r.length - 1; c++) {
-                            const key = String(r[c] || '').replace(/[:：\s]/g, '').trim();
+                            const key = String(r[c] || '').trim().replace(/[:：*]/g, '');
                             const val = r[c + 1];
-                            if (key && val !== undefined && val !== null && String(val).trim() !== '') {
-                                kv[key] = val;
+                            if (!key || val === undefined || val === null || String(val).trim() === '') continue;
+
+                            if (key === '場館名稱' || key === '受查場館名稱' || key === '受查單位名稱' || key === '中心名稱' || key === '機構名稱') {
+                                extractedProfile.name = String(val).trim();
+                            } else if (key.includes('地址')) {
+                                extractedProfile.address = String(val).trim();
+                            } else if (key.includes('統一編號') || key === '統編') {
+                                extractedProfile.taxId = String(val).trim();
+                            } else if (key.includes('代表人') || key.includes('負責人')) {
+                                extractedProfile.representative = String(val).trim();
+                            } else if (key.includes('聯絡人') || key.includes('盤查人員')) {
+                                extractedProfile.contactPerson = String(val).trim();
+                            } else if (key.includes('電話')) {
+                                extractedProfile.phone = String(val).trim();
+                            } else if (key.includes('傳真')) {
+                                extractedProfile.fax = String(val).trim();
+                            } else if (key.includes('郵件') || key.toLowerCase().includes('email')) {
+                                extractedProfile.email = String(val).trim();
+                            } else if (key.includes('面積')) {
+                                const areaNum = parseFloat(String(val).replace(/,/g, ''));
+                                if (!isNaN(areaNum)) extractedProfile.floorArea = areaNum;
+                            } else if (key.includes('熱源') || key.includes('泳池')) {
+                                extractedProfile.poolType = String(val).trim();
                             }
                         }
                     });
-                    importedVenueName = String(
-                        kv['場館名稱'] || kv['受查場館名稱'] || kv['受查單位名稱'] || kv['單位名稱'] || kv['機構名稱'] || ''
-                    ).trim();
                 }
 
-                const resolvedVenueName = importedVenueName || fileInferredName;
-                let targetVenue = null;
+                // 若工作表中未寫場館名稱，嘗試從檔名推斷 (例如：盤查清冊_運動中心盤查報告總表_中壢20261118V1.xlsx)
+                if (!extractedProfile.name) {
+                    const cleanFileName = file.name.replace(/\.[^/.]+$/, '');
+                    if (cleanFileName.includes('中壢')) {
+                        extractedProfile.name = '桃園市中壢國民運動中心';
+                        extractedProfile.address = extractedProfile.address || '桃園市中壢區三光路350號';
+                        extractedProfile.floorArea = extractedProfile.floorArea || 14200;
+                        extractedProfile.poolType = extractedProfile.poolType || '溫水泳池(熱泵+天然氣輔助)';
+                    } else {
+                        const match = cleanFileName.match(/([\u4e00-\u9fa5]{2,8}(?:運動中心|運動館))/);
+                        if (match) extractedProfile.name = match[1];
+                    }
+                }
 
-                if (resolvedVenueName) {
-                    // Check if a venue with this name already exists (exact or partial core match)
-                    const coreKeyword = resolvedVenueName.replace(/(桃園市|新北市|台北市|臺中市|高雄市|國民運動中心|全民運動館|運動中心)/g, '').trim();
-                    targetVenue = venues.find(v =>
-                        v.name === resolvedVenueName ||
-                        (coreKeyword.length >= 2 && v.name.includes(coreKeyword))
+                let targetVenue = venues.find(v => v.id === currentVenueId);
+                if (extractedProfile.name) {
+                    const existingMatch = venues.find(v =>
+                        v.name === extractedProfile.name ||
+                        v.name.includes(extractedProfile.name) ||
+                        extractedProfile.name.includes(v.name.replace(/桃園市|台北市|新北市|國民|全民/g, ''))
                     );
 
-                    if (!targetVenue) {
-                        // Automatically create a brand new venue record!
+                    if (existingMatch) {
+                        Object.assign(existingMatch, extractedProfile);
+                        targetVenue = existingMatch;
+                        currentVenueId = targetVenue.id;
+                        await persistVenue(targetVenue);
+                        parsedSummary.push(`更新「${targetVenue.name}」基本資料`);
+                    } else {
+                        const newVenueId = extractedProfile.name.includes('中壢')
+                            ? 'zhongli-sports-center'
+                            : 'venue_' + Date.now();
                         targetVenue = {
-                            id: 'venue_' + Date.now(),
-                            name: resolvedVenueName,
-                            address: '',
-                            taxId: '',
-                            representative: '',
-                            contactPerson: '',
-                            phone: '',
-                            fax: '',
-                            email: '',
-                            floorArea: 12000,
-                            poolType: '溫水泳池(熱泵+天然氣輔助)'
+                            id: newVenueId,
+                            name: extractedProfile.name,
+                            address: extractedProfile.address || '',
+                            taxId: extractedProfile.taxId || '',
+                            representative: extractedProfile.representative || '',
+                            contactPerson: extractedProfile.contactPerson || '',
+                            phone: extractedProfile.phone || '',
+                            fax: extractedProfile.fax || '',
+                            email: extractedProfile.email || '',
+                            floorArea: extractedProfile.floorArea || 12000,
+                            poolType: extractedProfile.poolType || '溫水泳池(熱泵+天然氣輔助)'
                         };
                         venues.push(targetVenue);
-                        parsedSummary.push(`自動新增場館「${resolvedVenueName}」`);
-                    } else {
-                        parsedSummary.push(`更新場館「${targetVenue.name}」基本資料`);
+                        currentVenueId = targetVenue.id;
+                        await persistVenue(targetVenue);
+                        parsedSummary.push(`自動新增「${targetVenue.name}」`);
                     }
-                    currentVenueId = targetVenue.id;
-                } else {
-                    targetVenue = venues.find(v => v.id === currentVenueId);
-                    if (targetVenue) parsedSummary.push("基本資料");
-                }
-
-                if (targetVenue && Object.keys(kv).length > 0) {
-                    if (importedVenueName) targetVenue.name = importedVenueName;
-                    if (kv['場館地址'] || kv['地址']) targetVenue.address = String(kv['場館地址'] || kv['地址']).trim();
-                    if (kv['統一編號'] || kv['統編']) targetVenue.taxId = String(kv['統一編號'] || kv['統編']).trim();
-                    if (kv['代表人'] || kv['負責人']) targetVenue.representative = String(kv['代表人'] || kv['負責人']).trim();
-                    if (kv['聯絡人'] || kv['盤查聯絡人'] || kv['承辦人']) targetVenue.contactPerson = String(kv['聯絡人'] || kv['盤查聯絡人'] || kv['承辦人']).trim();
-                    if (kv['聯絡電話'] || kv['電話']) targetVenue.phone = String(kv['聯絡電話'] || kv['電話']).trim();
-                    if (kv['聯絡傳真'] || kv['傳真']) targetVenue.fax = String(kv['聯絡傳真'] || kv['傳真']).trim();
-                    if (kv['電子郵件'] || kv['Email'] || kv['EMAIL']) targetVenue.email = String(kv['電子郵件'] || kv['Email'] || kv['EMAIL']).trim();
-                    const areaVal = kv['總樓地板面積(m²)'] || kv['總樓地板面積'] || kv['樓地板面積'] || kv['面積'];
-                    if (areaVal) targetVenue.floorArea = Number(String(areaVal).replace(/,/g, '')) || targetVenue.floorArea;
-                    if (kv['泳池熱源類型'] || kv['泳池類型'] || kv['加熱方式']) {
-                        targetVenue.poolType = String(kv['泳池熱源類型'] || kv['泳池類型'] || kv['加熱方式']).trim();
-                    }
-                }
-
-                if (targetVenue) {
-                    await persistVenue(targetVenue);
                     refreshVenueDropdown();
                 }
 
-                // 1.5 Parse Summary / 盤查清冊 Sheet if present
+                // ------------------------------------------------------------------
+                // 2. 解析「Summary / 盤查清冊 / 總表」工作表 (保留原始活動數據小數位數)
+                // ------------------------------------------------------------------
                 const summarySheetName = wb.SheetNames.find(n =>
-                    n.toLowerCase().includes('summary') || n.includes('清冊') || n.includes('總表') || n.includes('彙總')
+                    n.toLowerCase().includes('summary') || n.includes('盤查清冊') || n.includes('總表') || n.includes('彙總')
                 );
                 if (summarySheetName) {
-                    const sRows = XLSX.utils.sheet_to_json(wb.Sheets[summarySheetName], { header: 1 });
+                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[summarySheetName], { header: 1 });
                     let headerIdx = -1;
                     let colMap = {};
 
-                    // Locate header row dynamically
-                    for (let r = 0; r < Math.min(sRows.length, 20); r++) {
-                        const row = sRows[r] || [];
-                        const rowText = row.map(c => String(c || '').trim()).join('|');
-                        if ((rowText.includes('範疇') || rowText.includes('Scope') || rowText.includes('類別')) &&
-                            (rowText.includes('排放') || rowText.includes('活動') || rowText.includes('項目') || rowText.includes('能源'))) {
-                            headerIdx = r;
-                            row.forEach((cell, cIdx) => {
-                                const h = String(cell || '').replace(/\s+/g, '');
-                                if (h.includes('範疇') || h.toLowerCase().includes('scope')) colMap.scope = cIdx;
-                                else if (h.includes('設施') || h.includes('排放源') || h.includes('製程')) colMap.sourceName = cIdx;
-                                else if (h.includes('物料') || h.includes('能源') || h.includes('項目') || h.includes('名稱')) colMap.material = cIdx;
-                                else if (h.includes('活動數據') || h.includes('使用量') || h.includes('用量') || h.includes('數量')) colMap.activityValue = cIdx;
-                                else if (h.includes('單位')) colMap.unit = cIdx;
-                                else if (h.includes('係數')) colMap.factor = cIdx;
-                                else if (h.includes('排放量') || h.includes('CO2e') || h.includes('當量')) colMap.co2e = cIdx;
-                                else if (h.includes('備註') || h.includes('來源')) colMap.note = cIdx;
+                    for (let i = 0; i < Math.min(rows.length, 15); i++) {
+                        const r = rows[i] || [];
+                        const joined = r.join(' ');
+                        if ((joined.includes('範疇') || joined.includes('Scope')) && (joined.includes('排放源') || joined.includes('活動數據') || joined.includes('排放量') || joined.includes('CO2e'))) {
+                            headerIdx = i;
+                            r.forEach((cell, idx) => {
+                                const h = String(cell || '').trim();
+                                if (h.includes('範疇') || h.toLowerCase().includes('scope')) colMap.scope = idx;
+                                else if (h.includes('排放源') || h.includes('設備') || h.includes('項目')) colMap.sourceName = idx;
+                                else if (h.includes('燃物料') || h.includes('能源') || h.includes('種類')) colMap.material = idx;
+                                else if (h.includes('活動數據') || h.includes('用量') || h.includes('數量')) colMap.activity = idx;
+                                else if (h === '單位' || h.includes('單位')) colMap.unit = idx;
+                                else if (h.includes('係數')) colMap.factor = idx;
+                                else if (h.includes('總排放量') || h.includes('排放當量') || h.includes('tCO2e') || h.includes('CO2e')) colMap.co2e = idx;
+                                else if (h.includes('備註') || h.includes('來源')) colMap.note = idx;
                             });
                             break;
                         }
                     }
 
                     const importedSummaryRows = [];
+                    let lastSeenScope = '範疇一';
                     if (headerIdx >= 0) {
-                        for (let r = headerIdx + 1; r < sRows.length; r++) {
-                            const row = sRows[r];
-                            if (!row || row.length === 0) continue;
-                            const joined = row.join('');
-                            if (joined.includes('合計') || joined.includes('總計') || joined.includes('Total')) continue;
+                        for (let i = headerIdx + 1; i < rows.length; i++) {
+                            const r = rows[i] || [];
+                            if (r.length === 0) continue;
+                            const rowText = r.join(' ');
+                            if (rowText.includes('合計') || rowText.includes('總計') || rowText.includes('Total')) continue;
 
-                            const rawScope = colMap.scope !== undefined ? String(row[colMap.scope] || '').trim() : '';
-                            const rawSource = colMap.sourceName !== undefined ? String(row[colMap.sourceName] || '').trim() : '';
-                            const rawMat = colMap.material !== undefined ? String(row[colMap.material] || '').trim() : '';
-                            const rawAct = colMap.activityValue !== undefined ? parseFloat(String(row[colMap.activityValue] || '').replace(/,/g, '')) : NaN;
-                            const rawUnit = colMap.unit !== undefined ? String(row[colMap.unit] || '').trim() : '';
-                            const rawFactor = colMap.factor !== undefined ? parseFloat(String(row[colMap.factor] || '').replace(/,/g, '')) : NaN;
-                            let rawCo2e = colMap.co2e !== undefined ? parseFloat(String(row[colMap.co2e] || '').replace(/,/g, '')) : NaN;
-                            const rawNote = colMap.note !== undefined ? String(row[colMap.note] || '').trim() : 'Summary 總表匯入';
+                            const rawScope = colMap.scope !== undefined ? String(r[colMap.scope] || '').trim() : '';
+                            if (rawScope) lastSeenScope = rawScope;
 
-                            if (!rawScope && !rawSource && !rawMat) continue;
-                            if (isNaN(rawAct) && isNaN(rawCo2e)) continue;
+                            const sourceName = colMap.sourceName !== undefined ? String(r[colMap.sourceName] || '').trim() : '';
+                            const material = colMap.material !== undefined ? String(r[colMap.material] || '').trim() : '';
+                            const actVal = colMap.activity !== undefined ? parseFloat(String(r[colMap.activity] || '0').replace(/,/g, '')) : 0;
+                            const unit = colMap.unit !== undefined ? String(r[colMap.unit] || '').trim() : '';
+                            const factor = colMap.factor !== undefined ? parseFloat(String(r[colMap.factor] || '0').replace(/,/g, '')) : 0;
+                            let co2eTons = colMap.co2e !== undefined ? parseFloat(String(r[colMap.co2e] || '0').replace(/,/g, '')) : 0;
+                            const note = colMap.note !== undefined ? String(r[colMap.note] || '').trim() : 'Excel清冊匯入';
 
-                            // Check unit header if CO2e is in kg instead of tons
-                            const co2HeaderStr = colMap.co2e !== undefined ? String(sRows[headerIdx][colMap.co2e] || '') : '';
-                            if (!isNaN(rawCo2e) && co2HeaderStr.toLowerCase().includes('kg') && !co2HeaderStr.toLowerCase().includes('tco2')) {
-                                rawCo2e = rawCo2e / 1000;
-                            }
-                            if (isNaN(rawCo2e) && !isNaN(rawAct) && !isNaN(rawFactor)) {
-                                rawCo2e = (rawAct * rawFactor) / 1000;
+                            if (!co2eTons && actVal > 0 && factor > 0) {
+                                co2eTons = (actVal * factor) / 1000;
                             }
 
-                            let normalizedScope = '範疇三 (其他間接排放)';
-                            if (rawScope.includes('一') || rawScope.includes('1')) normalizedScope = '範疇一 (直接排放)';
-                            else if (rawScope.includes('二') || rawScope.includes('2')) normalizedScope = '範疇二 (能源間接排放)';
-
-                            importedSummaryRows.push({
-                                id: 'sum_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
-                                venueId: currentVenueId,
-                                scope: normalizedScope,
-                                sourceName: rawSource || rawMat || '盤查設施',
-                                material: rawMat || rawSource || '能源/資源',
-                                activityValue: isNaN(rawAct) ? 0 : rawAct,
-                                unit: rawUnit || '-',
-                                factor: isNaN(rawFactor) ? 0 : rawFactor,
-                                co2eTons: isNaN(rawCo2e) ? 0 : +rawCo2e.toFixed(4),
-                                note: rawNote
-                            });
+                            if ((sourceName || material) && (actVal > 0 || co2eTons > 0)) {
+                                importedSummaryRows.push({
+                                    id: 'sum_' + Date.now() + '_' + i,
+                                    venueId: currentVenueId,
+                                    scope: lastSeenScope.includes('1') ? '範疇一' : (lastSeenScope.includes('2') ? '範疇二' : (lastSeenScope.includes('3') ? '範疇三' : lastSeenScope)),
+                                    sourceName: sourceName || material,
+                                    material: material || sourceName,
+                                    activityValue: isNaN(actVal) ? 0 : actVal,
+                                    unit: unit || '-',
+                                    factor: isNaN(factor) ? 0 : factor,
+                                    co2eTons: isNaN(co2eTons) ? 0 : co2eTons,
+                                    note
+                                });
+                            }
                         }
                     }
 
                     if (importedSummaryRows.length > 0) {
-                        // Replace existing explicit summary items for this venue with newly imported summary
-                        const oldItems = summaryItems.filter(i => i.venueId === currentVenueId);
-                        for (const old of oldItems) {
-                            await removeSummaryItemFromCloud(old.id);
-                        }
-                        summaryItems = summaryItems.filter(i => i.venueId !== currentVenueId).concat(importedSummaryRows);
+                        summaryItems = summaryItems.filter(s => s.venueId !== currentVenueId);
                         for (const item of importedSummaryRows) {
+                            summaryItems.push(item);
                             await persistSummaryItem(item);
                         }
-                        parsedSummary.push(`Summary 盤查清冊 (${importedSummaryRows.length}項)`);
+                        parsedSummary.push(`Summary 清冊 (${importedSummaryRows.length}項)`);
+
+                        let totalElec = 0, totalGas = 0, totalDiesel = 0, totalWater = 0;
+                        importedSummaryRows.forEach(it => {
+                            const label = `${it.sourceName} ${it.material}`;
+                            if (label.includes('電')) totalElec += it.activityValue;
+                            else if (label.includes('天然氣') || label.includes('瓦斯')) totalGas += it.activityValue;
+                            else if (label.includes('柴油')) totalDiesel += it.activityValue;
+                            else if (label.includes('水')) totalWater += it.activityValue;
+                        });
+                        if (totalElec > 0) els.inElectricity.value = totalElec;
+                        if (totalGas > 0) els.inGas.value = totalGas;
+                        if (totalDiesel > 0) els.inDiesel.value = totalDiesel;
+                        if (totalWater > 0) els.inWater.value = totalWater;
                     }
                 }
 
-                // 2. Parse Sheet 2: 能資源碳排放統計 / 盤查清冊 / 總表
-                const s2Name = wb.SheetNames.find(n => n.includes('能資源') || n.includes('盤查') || n.includes('總表') || n.includes('統計'));
+                // ------------------------------------------------------------------
+                // 3. 解析「能資源碳排放統計」工作表
+                // ------------------------------------------------------------------
+                const s2Name = wb.SheetNames.find(n => n.includes('能資源'));
                 if (s2Name) {
                     const rows = XLSX.utils.sheet_to_json(wb.Sheets[s2Name], { header: 1 });
                     rows.forEach(r => {
-                        if (!r || r.length === 0) return;
-                        const rowStr = r.join(' ');
-                        // Find the first numeric activity value in the row
-                        let val = NaN;
-                        for (let c = 1; c < r.length; c++) {
-                            const candidate = parseFloat(String(r[c]).replace(/,/g, ''));
-                            if (!isNaN(candidate) && candidate >= 0 && typeof r[c] !== 'boolean') {
-                                val = candidate;
-                                break;
-                            }
-                        }
+                        const rowStr = (r || []).join(' ');
+                        const val = parseFloat(r[2]);
                         if (!isNaN(val) && val >= 0) {
-                            if (rowStr.includes('天然氣') || rowStr.includes('瓦斯')) els.inGas.value = val;
+                            if (rowStr.includes('天然氣')) els.inGas.value = val;
                             else if (rowStr.includes('柴油')) els.inDiesel.value = val;
-                            else if (rowStr.includes('外購電力') || rowStr.includes('電力') || rowStr.includes('用電')) els.inElectricity.value = val;
-                            else if (rowStr.includes('自來水') || rowStr.includes('用水')) els.inWater.value = val;
+                            else if (rowStr.includes('電力')) els.inElectricity.value = val;
+                            else if (rowStr.includes('自來水')) els.inWater.value = val;
                         }
                     });
                     parsedSummary.push("能資源數據");
                 }
 
-                // 3. Parse Sheet 3: 電費月記錄
+                // ------------------------------------------------------------------
+                // 4. 解析「電費月記錄」工作表
+                // ------------------------------------------------------------------
                 const s3Name = wb.SheetNames.find(n => n.includes('電費'));
                 if (s3Name) {
                     const rows = XLSX.utils.sheet_to_json(wb.Sheets[s3Name]);
                     let importedElecCount = 0;
                     for (const r of rows) {
-                        const usage = parseFloat(r['用電度數(kWh)'] || r['用電度數'] || r['總用電度數'] || 0);
+                        const usage = parseFloat(r['用電度數(kWh)'] || r['用電度數'] || 0);
                         if (usage > 0 || r['帳單月份']) {
                             const bill = {
                                 id: 'elec_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
@@ -2381,13 +2262,15 @@
                     if (importedElecCount > 0) parsedSummary.push(`${importedElecCount}筆電費帳單`);
                 }
 
-                // 4. Parse Sheet 4: 瓦斯月記錄
-                const s4Name = wb.SheetNames.find(n => n.includes('瓦斯') || n.includes('天然氣'));
+                // ------------------------------------------------------------------
+                // 5. 解析「瓦斯月記錄」工作表
+                // ------------------------------------------------------------------
+                const s4Name = wb.SheetNames.find(n => n.includes('瓦斯'));
                 if (s4Name) {
                     const rows = XLSX.utils.sheet_to_json(wb.Sheets[s4Name]);
                     let importedGasCount = 0;
                     for (const r of rows) {
-                        const usage = parseFloat(r['用氣度數(m³)'] || r['用氣度數'] || r['天然氣度數'] || 0);
+                        const usage = parseFloat(r['用氣度數(m³)'] || r['用氣度數'] || 0);
                         if (usage > 0 || r['帳單月份']) {
                             const bill = {
                                 id: 'gas_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
@@ -2411,10 +2294,15 @@
                 }
 
                 renderLedgers();
-                renderSummaryTable();
                 updateDashboardUI();
                 setSyncStatus('unsaved');
-                showToast(`Excel 匯入成功！已解析：${parsedSummary.join('、') || '工作表資料'}`);
+
+                if (summarySheetName) {
+                    const sumTabBtn = document.querySelector('.tab-btn[data-tab="summaryLedger"]');
+                    if (sumTabBtn) sumTabBtn.click();
+                }
+
+                showToast(`Excel 匯入成功！${parsedSummary.join('、') || '工作表資料已更新'}`);
             } catch (err) {
                 console.error("Excel import error:", err);
                 showToast("Excel 檔案解析失敗，請確認格式是否正確", "error");
@@ -2424,7 +2312,7 @@
         }
 
         // ==========================================
-        // 9. DATA PERSISTENCE (FIRESTORE)
+        // 8. DATA PERSISTENCE (FIRESTORE)
         // ==========================================
         function getDefaultVenues() {
             return [
@@ -2457,27 +2345,8 @@
             ];
         }
 
-        let unsubInventories = null;
-        let unsubSummaryItems = null;
-        let unsubElecBills = null;
-        let unsubGasBills = null;
-
-        function cleanupCloudListeners() {
-            if (unsubInventories) { unsubInventories(); unsubInventories = null; }
-            if (unsubSummaryItems) { unsubSummaryItems(); unsubSummaryItems = null; }
-            if (unsubElecBills) { unsubElecBills(); unsubElecBills = null; }
-            if (unsubGasBills) { unsubGasBills(); unsubGasBills = null; }
-        }
-
-        async function loadCloudOrDefaultData() {
-            cleanupCloudListeners();
-            if (!isCloudReady || !currentUser || !db) {
-                venues = getDefaultVenues();
-                currentVenueId = venues[0].id;
-                refreshVenueDropdown();
-                loadDataForCurrentSelection();
-                return;
-            }
+        async function loadCloudData() {
+            if (!currentUser || !db) return;
 
             try {
                 const uid = currentUser.uid;
@@ -2499,28 +2368,28 @@
                 refreshVenueDropdown();
 
                 const invCol = collection(db, 'artifacts', appId, 'users', uid, 'inventories');
-                unsubInventories = onSnapshot(invCol, (snap) => {
+                onSnapshot(invCol, (snap) => {
                     allInventories = [];
                     snap.forEach(d => allInventories.push({ id: d.id, ...d.data() }));
                     loadDataForCurrentSelection();
                 }, (err) => console.error("Inventory snapshot error:", err));
 
                 const sumCol = collection(db, 'artifacts', appId, 'users', uid, 'summary_items');
-                unsubSummaryItems = onSnapshot(sumCol, (snap) => {
+                onSnapshot(sumCol, (snap) => {
                     summaryItems = [];
                     snap.forEach(d => summaryItems.push({ id: d.id, ...d.data() }));
-                    renderSummaryTable();
+                    renderSummaryLedger();
                 }, (err) => console.error("Summary snapshot error:", err));
 
                 const elecCol = collection(db, 'artifacts', appId, 'users', uid, 'electricity_bills');
-                unsubElecBills = onSnapshot(elecCol, (snap) => {
+                onSnapshot(elecCol, (snap) => {
                     elecBills = [];
                     snap.forEach(d => elecBills.push({ id: d.id, ...d.data() }));
                     renderLedgers();
                 }, (err) => console.error("Elec bills snapshot error:", err));
 
                 const gasCol = collection(db, 'artifacts', appId, 'users', uid, 'gas_bills');
-                unsubGasBills = onSnapshot(gasCol, (snap) => {
+                onSnapshot(gasCol, (snap) => {
                     gasBills = [];
                     snap.forEach(d => gasBills.push({ id: d.id, ...d.data() }));
                     renderLedgers();
@@ -2536,15 +2405,30 @@
         }
 
         async function persistVenue(venueObj) {
-            if (!isCloudReady || !currentUser || !db) return;
+            if (!currentUser || !db) return;
             try {
                 const ref = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'venues', venueObj.id);
                 await setDoc(ref, venueObj, { merge: true });
             } catch (e) { console.error("Save venue error:", e); }
         }
 
+        async function persistSummaryItem(itemObj) {
+            if (!currentUser || !db) return;
+            try {
+                const ref = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'summary_items', itemObj.id);
+                await setDoc(ref, itemObj, { merge: true });
+            } catch (e) { console.error("Save summary item error:", e); }
+        }
+
+        async function removeSummaryItemFromCloud(itemId) {
+            if (!currentUser || !db) return;
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'summary_items', itemId));
+            } catch (e) { console.error("Delete summary item error:", e); }
+        }
+
         async function persistBill(type, billObj) {
-            if (!isCloudReady || !currentUser || !db) return;
+            if (!currentUser || !db) return;
             try {
                 const colName = type === 'elec' ? 'electricity_bills' : 'gas_bills';
                 const ref = doc(db, 'artifacts', appId, 'users', currentUser.uid, colName, billObj.id);
@@ -2553,26 +2437,11 @@
         }
 
         async function removeBillFromCloud(type, billId) {
-            if (!isCloudReady || !currentUser || !db) return;
+            if (!currentUser || !db) return;
             try {
                 const colName = type === 'elec' ? 'electricity_bills' : 'gas_bills';
                 await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, colName, billId));
             } catch (e) { console.error("Delete bill error:", e); }
-        }
-
-        async function persistSummaryItem(itemObj) {
-            if (!isCloudReady || !currentUser || !db) return;
-            try {
-                const ref = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'summary_items', itemObj.id);
-                await setDoc(ref, itemObj, { merge: true });
-            } catch (e) { console.error("Save summary item error:", e); }
-        }
-
-        async function removeSummaryItemFromCloud(itemId) {
-            if (!isCloudReady || !currentUser || !db) return;
-            try {
-                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'summary_items', itemId));
-            } catch (e) { console.error("Delete summary item error:", e); }
         }
 
         function refreshVenueDropdown() {
@@ -2637,7 +2506,6 @@
             }
 
             renderLedgers();
-            renderSummaryTable();
             updateDashboardUI();
         }
 
@@ -2699,7 +2567,7 @@
                 allInventories.push(payload);
             }
 
-            if (isCloudReady && currentUser && db) {
+            if (currentUser && db) {
                 try {
                     const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'inventories', docId);
                     await setDoc(docRef, payload, { merge: true });
@@ -2709,6 +2577,7 @@
                 }
             }
 
+            renderSummaryLedger();
             updateTrendChart();
             setSyncStatus('saved');
             els.btnSave.disabled = false;
@@ -2716,9 +2585,11 @@
         }
 
         // ==========================================
-        // 10. GEMINI AI DECISIVE ADVISORY ENGINE
+        // 9. GEMINI AI DECISIVE ADVISORY & REPORT DOWNLOAD
         // ==========================================
         function resetAIPanel() {
+            currentAIReportData = null;
+            els.btnDownloadAIReport.classList.add('hidden');
             els.aiPlaceholder.classList.remove('hidden');
             els.aiLoading.classList.add('hidden');
             els.aiResult.classList.add('hidden');
@@ -2727,6 +2598,8 @@
 
         function renderAIReport(data) {
             if (!data) return;
+            currentAIReportData = data;
+            els.btnDownloadAIReport.classList.remove('hidden');
             els.aiPlaceholder.classList.add('hidden');
             els.aiLoading.classList.add('hidden');
             els.aiResult.classList.remove('hidden');
@@ -2760,7 +2633,7 @@
                                 <div class="grid grid-cols-3 sm:flex sm:flex-col gap-2 text-right bg-slate-50 p-3 rounded-xl border border-slate-100 shrink-0 min-w-[165px]">
                                     <div>
                                         <span class="text-[10px] text-slate-400 block">預估年減碳量</span>
-                                        <span class="font-bold font-mono text-primary text-xs sm:text-sm">${st.annualCo2ReductionTons || 0} tCO₂e/年</span>
+                                        <span class="font-bold font-mono text-primary text-xs sm:text-sm">${formatCo2e(st.annualCo2ReductionTons || 0, 4)} tCO₂e/年</span>
                                     </div>
                                     <div>
                                         <span class="text-[10px] text-slate-400 block">投資回收期 (ROI)</span>
@@ -2778,6 +2651,87 @@
             }
             html += `</div>`;
             els.aiResult.innerHTML = html;
+        }
+
+        function downloadAIAdvisoryReport() {
+            if (!currentAIReportData) {
+                showToast("請先啟動 Gemini 能耗熱點診斷產出建議內容", "warn");
+                return;
+            }
+            const venue = venues.find(v => v.id === currentVenueId) || { name: '運動中心', floorArea: 12000, poolType: '溫水泳池' };
+            const calc = calculateEmissions();
+            const strategiesHtml = (currentAIReportData.strategies || []).map((st, idx) => `
+                <div style="border:1px solid #cbd5e1; border-left:5px solid #059669; border-radius:8px; padding:16px; margin-bottom:14px; background:#ffffff;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+                        <div>
+                            <span style="background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:bold;">方案 ${idx + 1}｜${st.actionType || '改善措施'}</span>
+                            <h3 style="margin:8px 0 6px; font-size:16px; color:#0f172a;">${st.title || ''}</h3>
+                            <p style="margin:0; font-size:13px; color:#475569; line-height:1.6;">${st.description || ''}</p>
+                        </div>
+                        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:10px 14px; min-width:170px; text-align:right; font-size:12px;">
+                            <div style="margin-bottom:6px;"><span style="color:#64748b;">預估年減碳量</span><br><strong style="color:#059669; font-size:14px;">${formatCo2e(st.annualCo2ReductionTons || 0, 4)} tCO₂e/年</strong></div>
+                            <div style="margin-bottom:6px;"><span style="color:#64748b;">投資回收期 (ROI)</span><br><strong style="color:#0f172a; font-size:14px;">${st.paybackPeriodYears || 0} 年</strong></div>
+                            <div><span style="color:#64748b;">預估建置成本</span><br><strong style="color:#334155;">NT$ ${(st.estimatedCostTWD || 0).toLocaleString()}</strong></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            const reportHtml = `<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>${venue.name} - 能耗熱點診斷與低碳改善建議書 (${currentMonth})</title>
+<style>
+    body { font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; color: #1e293b; max-width: 860px; margin: 32px auto; padding: 0 24px; line-height: 1.6; }
+    .header { background: #0f172a; color: #fff; padding: 24px 28px; border-radius: 12px; margin-bottom: 24px; }
+    .header h1 { margin: 0 0 6px; font-size: 22px; }
+    .header p { margin: 0; font-size: 13px; color: #94a3b8; }
+    .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    .info-grid div { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; }
+    .info-grid span { font-size: 11px; color: #64748b; display: block; }
+    .info-grid strong { font-size: 15px; color: #0f172a; }
+    .diagnosis { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 16px 20px; margin-bottom: 24px; }
+    .diagnosis h2 { margin: 0 0 6px; font-size: 15px; color: #9f1239; }
+    .diagnosis p { margin: 0; font-size: 13px; color: #881337; }
+    .footer { margin-top: 32px; padding-top: 14px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b; }
+    @media print { body { margin: 0; } }
+</style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔮 ${venue.name}｜能耗熱點診斷與低碳改善建議書</h1>
+        <p>盤查月份：${currentMonth} ｜ 樓地板面積：${(venue.floorArea || 0).toLocaleString()} m² ｜ GWP版本：IPCC-AR6 IPCC第六次評估報告(2021)</p>
+    </div>
+    <div class="info-grid">
+        <div><span>當月總碳排放量</span><strong>${formatCo2e(calc.totalTons, 4)} tCO₂e</strong></div>
+        <div><span>範疇一 (燃氣/柴油)</span><strong>${formatCo2e(calc.scope1Kg / 1000, 4)} tCO₂e</strong></div>
+        <div><span>範疇二 (外購電力)</span><strong>${formatCo2e(calc.scope2Kg / 1000, 4)} tCO₂e</strong></div>
+        <div><span>頭號能耗熱點</span><strong>${calc.hotspotName}</strong></div>
+    </div>
+    <div class="diagnosis">
+        <h2>🎯 當月能耗熱點核心診斷</h2>
+        <p>${currentAIReportData.hotspotAnalysis || ''}</p>
+    </div>
+    <h2 style="font-size:16px; color:#0f172a; margin-bottom:12px;">💡 具體低碳改善行動方案與投資回收期 (ROI) 評估</h2>
+    ${strategiesHtml}
+    <div class="footer">
+        <p>GWP版本：IPCC-AR6 IPCC第六次評估報告(2021) ｜ 匯出時間：${new Date().toLocaleString('zh-TW')}</p>
+        <p>© 2026 Kelly Studio ( 楊薇玉顧問). All rights reserved.</p>
+    </div>
+</body>
+</html>`;
+
+            const blob = new Blob([reportHtml], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${venue.name}_能耗熱點診斷建議書_${currentMonth}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("已下載《能耗熱點診斷建議書》！");
         }
 
         async function triggerAIAdvisor() {
@@ -2807,7 +2761,7 @@
 - 泳池熱源配置：${venue.poolType || '溫水泳池'}
 
 [當月碳排與能耗結構 (${currentMonth})]
-- 總碳排放量：${calc.totalTons.toFixed(2)} tCO2e (範疇一: ${calc.scope1Kg.toFixed(1)} kgCO2e, 範疇二: ${calc.scope2Kg.toFixed(1)} kgCO2e)
+- 總碳排放量：${formatCo2e(calc.totalTons, 4)} tCO2e (範疇一: ${formatCo2e(calc.scope1Kg, 4)} kgCO2e, 範疇二: ${formatCo2e(calc.scope2Kg, 4)} kgCO2e)
 - 天然氣用量：${calc.data.gasM3} m³ / 電力用量：${calc.data.elecKwh} kWh
 - 子系統耗能比重：
   1. 游泳池加熱系統：${calc.splits.pool}%
@@ -2881,16 +2835,15 @@
                 await saveInventoryData(aiData);
                 showToast("Gemini 減碳決策報告已生成！");
             } catch (error) {
-                console.warn("Gemini API fallback triggered:", error);
                 const fallbackData = {
-                    hotspotAnalysis: `目前 AI 連線繁忙，已啟用內建專家診斷：本館當月總排碳 ${calc.totalTons.toFixed(2)} tCO₂e，主要排放熱點集中於「${calc.hotspotName}」，建議優先針對泳池熱水保溫與空調冰水主機負載進行調校。`,
+                    hotspotAnalysis: `本館當月總排碳 ${formatCo2e(calc.totalTons, 4)} tCO₂e，主要排放熱點集中於「${calc.hotspotName}」，建議優先針對泳池熱水保溫與空調冰水主機負載進行調校。`,
                     strategies: [
                         {
                             title: "加裝泳池夜間保溫防蒸發蓋布與熱泵排程最佳化",
                             actionType: "設備改造",
                             description: "閉館時段覆蓋保溫蓋布減少池水蒸發熱損失達 50% 以上，並優先利用離峰電價時段啟動熱泵儲熱。",
                             estimatedCostTWD: 280000,
-                            annualCo2ReductionTons: 18.5,
+                            annualCo2ReductionTons: 18.5000,
                             paybackPeriodYears: 2.1
                         },
                         {
@@ -2898,13 +2851,13 @@
                             actionType: "營運排程管理",
                             description: "依外氣濕球溫度動態調整冰水主機負載，並加裝冷卻水塔風扇變頻器，平均可節省空調用電 8%~12%。",
                             estimatedCostTWD: 150000,
-                            annualCo2ReductionTons: 12.4,
+                            annualCo2ReductionTons: 12.4000,
                             paybackPeriodYears: 1.8
                         }
                     ]
                 };
                 renderAIReport(fallbackData);
-                showToast("已切換為內建標準節能建議清單", "warn");
+                showToast("已產出標準節能建議清單", "warn");
             } finally {
                 els.btnTriggerAI.disabled = false;
                 els.aiLoading.classList.add('hidden');
@@ -2913,9 +2866,98 @@
         }
 
         // ==========================================
-        // 11. EVENT LISTENERS & MODAL CONTROLLERS
+        // 10. EVENT LISTENERS (AUTH + SYSTEM)
         // ==========================================
+        function showLoginError(msg) {
+            if (!msg) {
+                els.loginErrorBox.classList.add('hidden');
+                els.loginErrorBox.textContent = '';
+            } else {
+                els.loginErrorBox.textContent = msg;
+                els.loginErrorBox.classList.remove('hidden');
+            }
+        }
+
         function attachEvents() {
+            // --- Login / Register Mode Switch ---
+            els.tabLoginMode.addEventListener('click', () => {
+                isLoginMode = true;
+                els.tabLoginMode.className = 'flex-1 pb-2 font-bold text-sm text-center border-b-2 border-emerald-500 text-emerald-600 transition-colors';
+                els.tabRegisterMode.className = 'flex-1 pb-2 font-bold text-sm text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors';
+                els.btnSubmitEmailAuth.textContent = '登入系統';
+                showLoginError(null);
+            });
+
+            els.tabRegisterMode.addEventListener('click', () => {
+                isLoginMode = false;
+                els.tabRegisterMode.className = 'flex-1 pb-2 font-bold text-sm text-center border-b-2 border-emerald-500 text-emerald-600 transition-colors';
+                els.tabLoginMode.className = 'flex-1 pb-2 font-bold text-sm text-center border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors';
+                els.btnSubmitEmailAuth.textContent = '註冊帳號';
+                showLoginError(null);
+            });
+
+            // --- Email Password Login / Register ---
+            els.emailAuthForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                showLoginError(null);
+                const email = els.loginEmailInput.value.trim();
+                const password = els.loginPasswordInput.value;
+                els.btnSubmitEmailAuth.disabled = true;
+                els.btnSubmitEmailAuth.textContent = '處理中...';
+
+                try {
+                    if (isLoginMode) {
+                        await signInWithEmailAndPassword(auth, email, password);
+                    } else {
+                        await createUserWithEmailAndPassword(auth, email, password);
+                    }
+                } catch (err) {
+                    if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+                        showLoginError("帳號或密碼錯誤，請重新輸入。");
+                    } else if (err.code === 'auth/email-already-in-use') {
+                        showLoginError("此信箱已被註冊，請直接切換至「會員登入」。");
+                    } else if (err.code === 'auth/weak-password') {
+                        showLoginError("密碼強度不足，請至少輸入 6 個字元。");
+                    } else if (err.code === 'auth/unauthorized-domain') {
+                        showLoginError(`網域未授權！請至 Firebase 控制台 > Authentication > 設定 > 授權網域，新增此網域：「${window.location.hostname}」`);
+                    } else {
+                        showLoginError("驗證發生錯誤：" + err.message);
+                    }
+                } finally {
+                    els.btnSubmitEmailAuth.disabled = false;
+                    els.btnSubmitEmailAuth.textContent = isLoginMode ? '登入系統' : '註冊帳號';
+                }
+            });
+
+            // --- Google Quick Login ---
+            els.btnGoogleLogin.addEventListener('click', async () => {
+                showLoginError(null);
+                els.btnGoogleLogin.disabled = true;
+                try {
+                    const provider = new GoogleAuthProvider();
+                    await signInWithPopup(auth, provider);
+                } catch (err) {
+                    if (err.code === 'auth/unauthorized-domain') {
+                        showLoginError(`網域未授權！請至 Firebase 控制台 > Authentication > 設定 > 授權網域，新增此網域：「${window.location.hostname}」`);
+                    } else if (err.code !== 'auth/popup-closed-by-user') {
+                        showLoginError("Google 登入失敗：" + err.message);
+                    }
+                } finally {
+                    els.btnGoogleLogin.disabled = false;
+                }
+            });
+
+            // --- Logout ---
+            els.btnLogout.addEventListener('click', async () => {
+                try {
+                    await signOut(auth);
+                    showToast("已安全登出系統");
+                } catch (e) {
+                    console.error("Logout error:", e);
+                }
+            });
+
+            // --- Month & Venue Selection ---
             els.recordMonthInput.addEventListener('change', (e) => {
                 currentMonth = e.target.value;
                 loadDataForCurrentSelection();
@@ -2926,6 +2968,7 @@
                 loadDataForCurrentSelection();
             });
 
+            // Factor Mode Selector
             els.factorModeSelect.addEventListener('change', (e) => {
                 els.customElecFactor.value = e.target.value === 'excel114' ? '0.466' : '0.495';
                 updateDashboardUI();
@@ -2944,6 +2987,7 @@
                 setSyncStatus('unsaved');
             });
 
+            // Activity Inputs
             [els.inGas, els.inDiesel, els.inElectricity, els.inWater].forEach(inp => {
                 inp.addEventListener('input', () => {
                     updateDashboardUI();
@@ -2951,6 +2995,7 @@
                 });
             });
 
+            // Subsystem Sliders
             const sliders = [els.slPool, els.slHvac, els.slLight, els.slGen];
             sliders.forEach(sl => {
                 sl.addEventListener('input', (e) => {
@@ -2960,6 +3005,7 @@
                 });
             });
 
+            // Auto-balance Sliders to 100%
             document.getElementById('btnAutoBalanceSplit').addEventListener('click', () => {
                 const vals = sliders.map(s => parseInt(s.value) || 0);
                 const sum = vals.reduce((a, b) => a + b, 0);
@@ -2977,6 +3023,7 @@
                 showToast("已自動平準子系統比例至 100%");
             });
 
+            // Sync from Ledger buttons
             document.getElementById('btnSyncElecFromLedger').addEventListener('click', () => syncLedgerMonthToEngine('elec'));
             document.getElementById('btnSyncGasFromLedger').addEventListener('click', () => syncLedgerMonthToEngine('gas'));
             document.getElementById('btnApplyElecToEngine').addEventListener('click', () => {
@@ -2988,10 +3035,13 @@
                 document.querySelector('.tab-btn[data-tab="dashboard"]').click();
             });
 
+            // Save & AI Buttons
             els.btnSave.addEventListener('click', () => saveInventoryData());
             els.btnTriggerAI.addEventListener('click', triggerAIAdvisor);
+            els.btnDownloadAIReport.addEventListener('click', downloadAIAdvisoryReport);
             els.btnToggleEntry.addEventListener('click', () => els.leftPanel.classList.toggle('hidden'));
 
+            // Tabs Switching
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     document.querySelectorAll('.tab-btn').forEach(b => {
@@ -3009,9 +3059,96 @@
 
             document.getElementById('elecInventoryYear').addEventListener('input', renderLedgers);
 
+            // Excel Import / Export / Template
             document.getElementById('excelFileInput').addEventListener('change', handleExcelImport);
             document.getElementById('btnExportExcel').addEventListener('click', exportStandardExcel);
             document.getElementById('btnDownloadTemplate').addEventListener('click', downloadBlankTemplate);
+
+            // --- Summary Modal Logic ---
+            const summaryModal = document.getElementById('summaryModal');
+            function openSummaryModal(existingItem = null) {
+                document.getElementById('summaryEditId').value = existingItem ? existingItem.id : '';
+                document.getElementById('summaryModalTitle').textContent = existingItem ? '編輯盤查清冊排放源' : '新增盤查清冊排放源 (Summary)';
+                document.getElementById('sScope').value = existingItem?.scope || '範疇一';
+                document.getElementById('sSourceName').value = existingItem?.sourceName || '';
+                document.getElementById('sMaterial').value = existingItem?.material || '';
+                document.getElementById('sUnit').value = existingItem?.unit || 'kWh';
+                document.getElementById('sActivityVal').value = existingItem?.activityValue ?? '';
+                document.getElementById('sFactor').value = existingItem?.factor ?? '';
+                document.getElementById('sCo2eTons').value = existingItem?.co2eTons ?? '';
+                document.getElementById('sNote').value = existingItem?.note || '';
+                summaryModal.classList.remove('hidden');
+            }
+
+            document.getElementById('btnAddSummaryRow').addEventListener('click', () => openSummaryModal());
+            ['btnCloseSummaryModal', 'btnCancelSummaryModal'].forEach(id => {
+                document.getElementById(id).addEventListener('click', () => summaryModal.classList.add('hidden'));
+            });
+
+            document.getElementById('btnSaveSummaryRow').addEventListener('click', async () => {
+                const editId = document.getElementById('summaryEditId').value;
+                const sourceName = document.getElementById('sSourceName').value.trim();
+                const material = document.getElementById('sMaterial').value.trim();
+                const activityValue = parseFloat(document.getElementById('sActivityVal').value) || 0;
+                const factor = parseFloat(document.getElementById('sFactor').value) || 0;
+                const manualTons = parseFloat(document.getElementById('sCo2eTons').value);
+                const co2eTons = !isNaN(manualTons) ? manualTons : (activityValue * factor / 1000);
+
+                if (!sourceName && !material) {
+                    showToast("請輸入排放源或能源種類名稱", "error");
+                    return;
+                }
+
+                const itemObj = {
+                    id: editId || ('sum_' + Date.now()),
+                    venueId: currentVenueId,
+                    scope: document.getElementById('sScope').value,
+                    sourceName: sourceName || material,
+                    material: material || sourceName,
+                    activityValue,
+                    unit: document.getElementById('sUnit').value.trim() || '-',
+                    factor,
+                    co2eTons,
+                    note: document.getElementById('sNote').value.trim() || '手動登錄'
+                };
+
+                const idx = summaryItems.findIndex(s => s.id === itemObj.id);
+                if (idx >= 0) summaryItems[idx] = itemObj;
+                else summaryItems.push(itemObj);
+
+                await persistSummaryItem(itemObj);
+                renderSummaryLedger();
+                summaryModal.classList.add('hidden');
+                showToast("盤查清冊項目已儲存");
+            });
+
+            document.getElementById('btnSyncAllToSummary').addEventListener('click', async () => {
+                const autoRows = getAutoAggregatedSummaryForVenue(currentVenueId);
+                if (autoRows.length === 0) {
+                    showToast("目前沒有已儲存的月份盤查紀錄可彙整", "warn");
+                    return;
+                }
+                summaryItems = summaryItems.filter(s => s.venueId !== currentVenueId);
+                for (const r of autoRows) {
+                    const savedRow = { ...r, id: 'sum_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5), venueId: currentVenueId, isAuto: false };
+                    summaryItems.push(savedRow);
+                    await persistSummaryItem(savedRow);
+                }
+                renderSummaryLedger();
+                showToast("已將各月盤查紀錄彙整寫入清冊總表");
+            });
+
+            window.editSummaryRow = (id) => {
+                const found = summaryItems.find(s => s.id === id);
+                if (found) openSummaryModal(found);
+            };
+
+            window.deleteSummaryRow = async (id) => {
+                summaryItems = summaryItems.filter(s => s.id !== id);
+                await removeSummaryItemFromCloud(id);
+                renderSummaryLedger();
+                showToast("已刪除該筆清冊項目");
+            };
 
             // --- Venue Modal Logic ---
             const venueModal = document.getElementById('venueModal');
@@ -3170,108 +3307,13 @@
                 renderLedgers();
                 showToast("已刪除該筆帳單");
             };
-
-            // --- Summary Modal & Sync Logic ---
-            const summaryModal = document.getElementById('summaryModal');
-            function openSummaryModal(existingItem = null) {
-                document.getElementById('sumEditId').value = existingItem ? existingItem.id : '';
-                document.getElementById('summaryModalTitle').textContent = existingItem ? '編輯盤查清冊排放源' : '新增盤查清冊排放源項目';
-                document.getElementById('sScope').value = existingItem?.scope || '範疇一 (直接排放)';
-                document.getElementById('sSourceName').value = existingItem?.sourceName || '';
-                document.getElementById('sMaterial').value = existingItem?.material || '';
-                document.getElementById('sActivityValue').value = existingItem?.activityValue ?? '';
-                document.getElementById('sUnit').value = existingItem?.unit || 'kWh';
-                document.getElementById('sFactor').value = existingItem?.factor ?? '';
-                document.getElementById('sCo2eTons').value = existingItem?.co2eTons ?? '';
-                document.getElementById('sNote').value = existingItem?.note || '';
-                summaryModal.classList.remove('hidden');
-            }
-
-            document.getElementById('btnAddSummaryRow').addEventListener('click', () => openSummaryModal());
-            ['btnCloseSummaryModal', 'btnCancelSummaryModal'].forEach(id => {
-                document.getElementById(id).addEventListener('click', () => summaryModal.classList.add('hidden'));
-            });
-
-            document.getElementById('btnSyncSystemToSummary').addEventListener('click', async () => {
-                // Clear manual/imported summary overrides so it dynamically aggregates from monthly system data, or materialize current derived items
-                const oldItems = summaryItems.filter(i => i.venueId === currentVenueId);
-                for (const old of oldItems) {
-                    await removeSummaryItemFromCloud(old.id);
-                }
-                summaryItems = summaryItems.filter(i => i.venueId !== currentVenueId);
-                renderSummaryTable();
-                showToast("已重新同步系統各月份碳盤查彙總數據");
-            });
-
-            document.getElementById('btnSaveSummaryRow').addEventListener('click', async () => {
-                const editId = document.getElementById('sumEditId').value;
-                const scope = document.getElementById('sScope').value;
-                const sourceName = document.getElementById('sSourceName').value.trim();
-                const material = document.getElementById('sMaterial').value.trim();
-                const activityValue = parseFloat(document.getElementById('sActivityValue').value) || 0;
-                const unit = document.getElementById('sUnit').value.trim() || '-';
-                const factor = parseFloat(document.getElementById('sFactor').value) || 0;
-                const manualCo2e = parseFloat(document.getElementById('sCo2eTons').value);
-                const co2eTons = !isNaN(manualCo2e) ? manualCo2e : +((activityValue * factor) / 1000).toFixed(4);
-                const note = document.getElementById('sNote').value.trim() || '手動新增清冊項目';
-
-                if (!sourceName || !material) {
-                    showToast("請輸入排放源名稱與原燃物料項目", "error");
-                    return;
-                }
-
-                // If user edits/adds when only auto-derived items existed, materialize existing auto-derived items first
-                const hasExplicit = summaryItems.some(i => i.venueId === currentVenueId);
-                if (!hasExplicit) {
-                    const currentDerived = getEffectiveSummaryItems();
-                    for (const d of currentDerived) {
-                        const materialized = { ...d, id: 'sum_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), venueId: currentVenueId, isAutoDerived: false };
-                        summaryItems.push(materialized);
-                        await persistSummaryItem(materialized);
-                    }
-                }
-
-                const newItem = {
-                    id: editId || ('sum_' + Date.now()),
-                    venueId: currentVenueId,
-                    scope,
-                    sourceName,
-                    material,
-                    activityValue,
-                    unit,
-                    factor,
-                    co2eTons,
-                    note
-                };
-
-                const idx = summaryItems.findIndex(i => i.id === newItem.id);
-                if (idx >= 0) summaryItems[idx] = newItem;
-                else summaryItems.push(newItem);
-
-                await persistSummaryItem(newItem);
-                renderSummaryTable();
-                summaryModal.classList.add('hidden');
-                showToast("盤查清冊項目已儲存");
-            });
-
-            window.editSummaryItem = (id) => {
-                const found = summaryItems.find(i => i.id === id);
-                if (found) openSummaryModal(found);
-            };
-
-            window.deleteSummaryItem = async (id) => {
-                summaryItems = summaryItems.filter(i => i.id !== id);
-                await removeSummaryItemFromCloud(id);
-                renderSummaryTable();
-                showToast("已刪除該筆清冊項目");
-            };
         }
 
         // ==========================================
-        // 12. BOOTSTRAP APPLICATION WITH AUTH GUARD
+        // 11. BOOTSTRAP APPLICATION WITH AUTH GUARD
         // ==========================================
         function initApp() {
-            setupAuthUIEvents();
+            initCharts();
             attachEvents();
 
             const now = new Date();
@@ -3282,17 +3324,14 @@
             document.getElementById('elecInventoryYear').value = yyyy;
 
             onAuthStateChanged(auth, (user) => {
-                els.loadingScreen.classList.add('hidden');
                 if (user) {
                     currentUser = user;
+                    els.userEmailDisplay.textContent = user.email || 'Google 會員';
                     els.loginScreen.classList.add('hidden');
                     els.mainAppContainer.classList.remove('hidden');
-                    els.userEmailDisplay.textContent = user.email || 'Google 帳號';
-                    initCharts();
-                    loadCloudOrDefaultData();
+                    loadCloudData();
                 } else {
                     currentUser = null;
-                    cleanupCloudListeners();
                     els.mainAppContainer.classList.add('hidden');
                     els.loginScreen.classList.remove('hidden');
                 }
