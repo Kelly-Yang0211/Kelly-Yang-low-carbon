@@ -1048,7 +1048,12 @@
             </div>
             <div class="px-6 py-3.5 bg-slate-100 border-t border-slate-200 flex justify-between items-center shrink-0">
                 <span class="text-[11px] text-slate-500">© 2026 Kelly Studio ( 楊薇玉顧問). All rights reserved.</span>
-                <button id="btnCloseAiOnlineModalFooter" class="px-5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold transition">關閉視窗</button>
+                <div class="flex items-center gap-2">
+                    <button id="btnCopyAiReportText" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition flex items-center gap-1.5">
+                        <i class="ph ph-copy text-sm"></i> 複製建議書內容
+                    </button>
+                    <button id="btnCloseAiOnlineModalFooter" class="px-5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold transition">關閉視窗</button>
+                </div>
             </div>
         </div>
     </div>
@@ -3170,6 +3175,42 @@
             document.getElementById('aiOnlineModal').classList.remove('hidden');
         }
 
+        function copyAIReportToClipboard() {
+            const venue = venues.find(v => v.id === currentVenueId) || { name: '運動中心', floorArea: 12000 };
+            const calc = calculateEmissions();
+            const reportData = currentAIReportData || buildDefaultHotspotReport(calc, venue);
+
+            const lines = [
+                `【${venue.name} — 能耗熱點診斷與低碳改善建議書】`,
+                `盤查月份：${currentMonth} | 總樓地板面積：${(venue.floorArea || 0).toLocaleString()} m²`,
+                `GWP版本：IPCC-AR6 IPCC第六次評估報告(2021)`,
+                `當月總碳排放量：${formatCo2e(calc.totalTons, 4)} tCO₂e (範疇一：${formatCo2e(calc.scope1Kg / 1000, 4)} tCO₂e / 範疇二：${formatCo2e(calc.scope2Kg / 1000, 4)} tCO₂e)`,
+                `當月頭號能耗熱點：${calc.hotspotName}`,
+                ``,
+                `■ 核心診斷：`,
+                reportData.hotspotAnalysis || '',
+                ``,
+                `■ 具體低碳改善行動方案：`,
+                ...(reportData.strategies || []).map((st, idx) =>
+                    `${idx + 1}. [${st.actionType}] ${st.title}\n   說明：${st.description}\n   預估年減碳量：${formatCo2e(st.annualCo2ReductionTons || 0, 4)} tCO₂e/年 | 投資回收期：${st.paybackPeriodYears || 0} 年 | 預估成本：NT$ ${(st.estimatedCostTWD || 0).toLocaleString()}`
+                )
+            ];
+
+            const textArea = document.createElement('textarea');
+            textArea.value = lines.join('\n');
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast("已複製診斷建議書內容至剪貼簿");
+            } catch (err) {
+                showToast("複製失敗，請手動選取文字複製", "warn");
+            }
+            document.body.removeChild(textArea);
+        }
+
         // ==========================================
         // 12. MODAL & TABLE CRUD HELPERS + INITIALIZATION
         // ==========================================
@@ -3523,8 +3564,14 @@
             els.btnSave.addEventListener('click', () => saveInventoryData());
             els.btnTriggerAI.addEventListener('click', triggerAIAdvisor);
             els.btnDownloadAIReport.addEventListener('click', downloadAIAdvisoryReport);
+            document.getElementById('btnCopyAiReportText').addEventListener('click', copyAIReportToClipboard);
             document.getElementById('btnCloseAiOnlineModal').addEventListener('click', () => document.getElementById('aiOnlineModal').classList.add('hidden'));
             document.getElementById('btnCloseAiOnlineModalFooter').addEventListener('click', () => document.getElementById('aiOnlineModal').classList.add('hidden'));
+            document.getElementById('aiOnlineModal').addEventListener('click', (e) => {
+                if (e.target.id === 'aiOnlineModal') {
+                    document.getElementById('aiOnlineModal').classList.add('hidden');
+                }
+            });
             document.getElementById('excelFileInput').addEventListener('change', handleExcelImport);
             document.getElementById('btnExportExcel').addEventListener('click', exportStandardExcel);
             document.getElementById('btnDownloadTemplate').addEventListener('click', downloadBlankTemplate);
