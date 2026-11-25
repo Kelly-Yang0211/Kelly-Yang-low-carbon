@@ -3092,63 +3092,106 @@
             btn.disabled = true;
             btn.innerHTML = `<i class="ph ph-spinner animate-spin text-lg"></i> 產製 PDF 中...`;
 
-            const reportContainer = document.getElementById('aiReportContainer');
-            const aiResultEl = document.getElementById('aiResult');
-
-            // 在實際可見的診斷結果區頂部，動態插入「場館碳排摘要標頭」，確保 html2canvas 直接截取真實畫面
-            const pdfHeaderEl = document.createElement('div');
-            pdfHeaderEl.id = 'pdfExportSummaryBanner';
-            pdfHeaderEl.className = 'mb-5 rounded-xl overflow-hidden border border-slate-300 bg-white';
-            pdfHeaderEl.innerHTML = `
-                <div class="bg-slate-900 text-white p-4">
-                    <h2 class="text-base font-bold">🔮 ${venue.name} — 能耗熱點診斷與低碳改善建議書</h2>
-                    <p class="text-[11px] text-slate-300 mt-1">盤查月份：${currentMonth} ｜ GWP版本：IPCC-AR6 IPCC第六次評估報告(2021) ｜ 產出時間：${new Date().toLocaleString('zh-TW')}</p>
+            // 準備乾淨的獨立列印容器，避免 h-screen overflow-hidden / overflow-y-auto 造成 html2canvas 截圖空白
+            const reportData = currentAIReportData || buildDefaultHotspotReport(calc, venue);
+            const strategiesHtml = (reportData.strategies || []).map((st, idx) => `
+                <div style="border: 1px solid #cbd5e1; border-left: 5px solid #059669; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; background: #ffffff; page-break-inside: avoid;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px;">
+                        <div style="flex: 1;">
+                            <div style="margin-bottom: 6px;">
+                                <span style="display: inline-block; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 5px; margin-right: 6px;">方案 ${idx + 1} · ${st.actionType || '工程改造'}</span>
+                                <span style="font-size: 14px; font-weight: 700; color: #0f172a;">${st.title || '節能改善專案'}</span>
+                            </div>
+                            <p style="font-size: 12px; color: #475569; line-height: 1.6; margin: 0;">${st.description || ''}</p>
+                        </div>
+                        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; min-width: 155px; text-align: right;">
+                            <div style="margin-bottom: 5px;">
+                                <div style="font-size: 10px; color: #64748b;">預估年減碳量</div>
+                                <div style="font-size: 13px; font-weight: 700; color: #059669; font-family: monospace;">${formatCo2e(st.annualCo2ReductionTons || 0, 4)} tCO₂e/年</div>
+                            </div>
+                            <div style="margin-bottom: 5px;">
+                                <div style="font-size: 10px; color: #64748b;">投資回收期 (ROI)</div>
+                                <div style="font-size: 12px; font-weight: 700; color: #1e293b; font-family: monospace;">${st.paybackPeriodYears || 0} 年</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 10px; color: #64748b;">預估建置成本</div>
+                                <div style="font-size: 12px; font-weight: 700; color: #334155; font-family: monospace;">NT$ ${(st.estimatedCostTWD || 0).toLocaleString()}</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="grid grid-cols-2 gap-x-6 gap-y-2 p-4 bg-slate-50 text-xs text-slate-800">
-                    <div><span class="font-bold text-slate-600">場館名稱：</span>${venue.name}</div>
-                    <div><span class="font-bold text-slate-600">總樓地板面積：</span>${(venue.floorArea || 0).toLocaleString()} m²</div>
-                    <div><span class="font-bold text-slate-600">當月總碳排放量：</span><span class="font-mono font-bold text-emerald-700">${formatCo2e(calc.totalTons, 4)} tCO₂e</span> (${formatCo2e(calc.totalKg, 4)} kgCO₂e)</div>
-                    <div><span class="font-bold text-slate-600">當月頭號能耗熱點：</span><span class="font-bold text-rose-700">${calc.hotspotName}</span></div>
-                    <div><span class="font-bold text-slate-600">範疇一直接排放：</span><span class="font-mono">${formatCo2e(calc.scope1Kg / 1000, 4)} tCO₂e</span></div>
-                    <div><span class="font-bold text-slate-600">範疇二能源間接排放：</span><span class="font-mono">${formatCo2e(calc.scope2Kg / 1000, 4)} tCO₂e</span></div>
+            `).join('');
+
+            const pdfWrapper = document.createElement('div');
+            pdfWrapper.style.width = '720px';
+            pdfWrapper.style.backgroundColor = '#ffffff';
+            pdfWrapper.style.color = '#1e293b';
+            pdfWrapper.style.fontFamily = "'Inter', 'PingFang TC', 'Microsoft JhengHei', sans-serif";
+            pdfWrapper.style.padding = '12px';
+            pdfWrapper.style.boxSizing = 'border-box';
+
+            pdfWrapper.innerHTML = `
+                <div style="background: #0f172a; color: #ffffff; padding: 18px 20px; border-radius: 10px; margin-bottom: 14px;">
+                    <div style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">🔮 ${venue.name} — 能耗熱點診斷與低碳改善建議書</div>
+                    <div style="font-size: 11px; color: #cbd5e1;">盤查月份：${currentMonth} ｜ GWP版本：IPCC-AR6 IPCC第六次評估報告(2021) ｜ 產出時間：${new Date().toLocaleString('zh-TW')}</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px 16px; font-size: 12px; margin-bottom: 16px;">
+                    <div><strong style="color: #475569;">場館名稱：</strong>${venue.name}</div>
+                    <div><strong style="color: #475569;">總樓地板面積：</strong>${(venue.floorArea || 0).toLocaleString()} m²</div>
+                    <div><strong style="color: #475569;">當月總碳排放量：</strong><span style="font-family: monospace; font-weight: 700; color: #059669;">${formatCo2e(calc.totalTons, 4)} tCO₂e</span> (${formatCo2e(calc.totalKg, 4)} kgCO₂e)</div>
+                    <div><strong style="color: #475569;">當月頭號能耗熱點：</strong><span style="font-weight: 700; color: #e11d48;">${calc.hotspotName}</span></div>
+                    <div><strong style="color: #475569;">範疇一直接排放：</strong><span style="font-family: monospace;">${formatCo2e(calc.scope1Kg / 1000, 4)} tCO₂e</span></div>
+                    <div><strong style="color: #475569;">範疇二能源間接排放：</strong><span style="font-family: monospace;">${formatCo2e(calc.scope2Kg / 1000, 4)} tCO₂e</span></div>
+                </div>
+
+                <div style="background: #fff1f2; border: 1px solid #fecdd3; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;">
+                    <div style="font-size: 13px; font-weight: 700; color: #9f1239; margin-bottom: 6px;">🎯 當月能耗熱點核心診斷</div>
+                    <p style="font-size: 12px; color: #881337; line-height: 1.65; margin: 0;">${reportData.hotspotAnalysis || '已完成場館能耗熱點分析。'}</p>
+                </div>
+
+                <div style="font-size: 14px; font-weight: 700; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 12px;">
+                    💡 具體低碳改善行動方案 (含投資回收期 ROI)
+                </div>
+
+                ${strategiesHtml}
+
+                <div style="margin-top: 18px; padding-top: 10px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 10px; color: #64748b;">
+                    <div>GWP版本：IPCC-AR6 IPCC第六次評估報告(2021)｜數值精度規範：ISO 14064-1 國際標準小數點後四位</div>
+                    <div style="margin-top: 2px;">© 2026 Kelly Studio ( 楊薇玉顧問). All rights reserved.</div>
                 </div>
             `;
 
-            const pdfFooterEl = document.createElement('div');
-            pdfFooterEl.id = 'pdfExportFooterBanner';
-            pdfFooterEl.className = 'mt-5 pt-3 border-t border-slate-200 text-center text-[11px] text-slate-500';
-            pdfFooterEl.innerHTML = `
-                <p>GWP版本：IPCC-AR6 IPCC第六次評估報告(2021)｜數值精度規範：ISO 14064-1 國際標準小數點後四位</p>
-                <p class="mt-0.5">© 2026 Kelly Studio ( 楊薇玉顧問). All rights reserved.</p>
-            `;
-
-            aiResultEl.insertBefore(pdfHeaderEl, aiResultEl.firstChild);
-            aiResultEl.appendChild(pdfFooterEl);
-
-            // 暫時將外層捲動容器捲動至診斷區塊，避免 html2canvas 因捲動偏移截到空白
-            const mainContent = document.getElementById('mainContent');
-            const prevScrollTop = mainContent ? mainContent.scrollTop : 0;
-            reportContainer.scrollIntoView({ behavior: 'instant', block: 'start' });
+            // 暫時以全螢幕白底遮罩掛載列印節點於頂層視窗 (0, 0)，徹底排除父層 overflow-hidden / scroll 裁切空白問題
+            const overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.inset = '0';
+            overlay.style.zIndex = '99999';
+            overlay.style.backgroundColor = 'rgba(15, 23, 42, 0.75)';
+            overlay.style.overflow = 'auto';
+            overlay.style.display = 'flex';
+            overlay.style.justifyContent = 'center';
+            overlay.style.alignItems = 'flex-start';
+            overlay.style.padding = '20px';
+            overlay.appendChild(pdfWrapper);
+            document.body.appendChild(overlay);
 
             const cleanup = () => {
-                if (pdfHeaderEl.parentNode) pdfHeaderEl.parentNode.removeChild(pdfHeaderEl);
-                if (pdfFooterEl.parentNode) pdfFooterEl.parentNode.removeChild(pdfFooterEl);
-                if (mainContent) mainContent.scrollTop = prevScrollTop;
+                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
                 btn.disabled = false;
                 btn.innerHTML = originalBtnHtml;
             };
 
             const filename = `${venue.name}_能耗熱點診斷建議書_${currentMonth}.pdf`;
             const opt = {
-                margin: [10, 10, 10, 10],
+                margin: [8, 8, 8, 8],
                 filename: filename,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: {
                     scale: 2,
                     useCORS: true,
                     backgroundColor: '#ffffff',
-                    scrollX: 0,
-                    scrollY: 0
+                    logging: false
                 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
                 pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
@@ -3156,7 +3199,7 @@
 
             setTimeout(() => {
                 if (typeof html2pdf !== 'undefined') {
-                    html2pdf().set(opt).from(aiResultEl).save()
+                    html2pdf().set(opt).from(pdfWrapper).save()
                         .then(() => {
                             showToast(`已成功下載 PDF：《${filename}》`);
                         })
@@ -3169,7 +3212,7 @@
                     cleanup();
                     showToast("PDF 模組載入中，請稍候再點擊", "warn");
                 }
-            }, 180);
+            }, 250);
         }
 
         // ==========================================
