@@ -2444,24 +2444,29 @@
                 }
 
                 // ------------------------------------------------------------------
-                // 3. 解析「能資源碳排放統計」工作表
+                // 3. 解析「能資源碳排放統計」工作表 (放寬欄位與工作表掃描，確保精準抓取)
                 // ------------------------------------------------------------------
-                const s2Name = wb.SheetNames.find(n => n.includes('能資源'));
-                if (s2Name) {
-                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[s2Name], { header: 1 });
+                const s2Name = wb.SheetNames.find(n => n.includes('能資源') || n.includes('統計'));
+                const sheetsToScanActivity = s2Name ? [s2Name] : wb.SheetNames;
+                sheetsToScanActivity.forEach(shName => {
+                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[shName], { header: 1 });
                     rows.forEach(r => {
-                        const rowStr = (r || []).join(' ');
-                        const val = parseNumericCell(r[2]);
+                        if (!r || r.length === 0) return;
+                        const rowStr = r.map(c => String(c || '')).join(' ');
+                        if (rowStr.includes('合計') || rowStr.includes('總計')) return;
+                        // 抓取該列中第一個合理的數值作為活動數據
+                        const numCells = r.map(c => parseNumericCell(c)).filter(v => v > 0 && v !== 2024 && v !== 2025 && v !== 2026);
+                        const val = parseNumericCell(r[2]) || (numCells.length > 0 ? numCells[0] : 0);
                         if (val > 0) {
-                            if (rowStr.includes('天然氣')) els.inGas.value = val;
-                            else if (rowStr.includes('柴油')) els.inDiesel.value = val;
-                            else if (rowStr.includes('電力')) els.inElectricity.value = val;
-                            else if (rowStr.includes('自來水')) els.inWater.value = val;
+                            if ((rowStr.includes('天然氣') || rowStr.includes('瓦斯')) && !els.inGas.value) els.inGas.value = val;
+                            else if (rowStr.includes('柴油') && !els.inDiesel.value) els.inDiesel.value = val;
+                            else if ((rowStr.includes('外購電力') || rowStr.includes('用電度數') || rowStr.includes('電力')) && !els.inElectricity.value) els.inElectricity.value = val;
+                            else if (rowStr.includes('自來水') && !els.inWater.value) els.inWater.value = val;
                         }
                     });
-                    if (!parsedSummary.some(s => s.includes('Summary'))) {
-                        parsedSummary.push("能資源數據");
-                    }
+                });
+                if (s2Name && !parsedSummary.some(s => s.includes('Summary'))) {
+                    parsedSummary.push("能資源數據");
                 }
 
                 // ------------------------------------------------------------------
@@ -2567,6 +2572,10 @@
                 updateDashboardUI();
                 await saveInventoryData();
 
+                // 自動切換至「碳排儀表板與 AI 顧問」分頁，讓紅框內 KPI 卡片與明細表即時呈現
+                const dashboardTabBtn = document.querySelector('.tab-btn[data-tab="dashboard"]');
+                if (dashboardTabBtn) dashboardTabBtn.click();
+
                 showToast(`Excel 匯入並全面同步完成！${parsedSummary.join('、') || '所有面板數據已更新'}`);
             } catch (err) {
                 console.error("Excel import error:", err);
@@ -2585,14 +2594,14 @@
             rows.forEach(it => {
                 const label = `${it.category || ''} ${it.sourceName || ''} ${it.material || ''}`;
                 const val = Number(it.activityValue) || 0;
-                if (label.includes('電')) {
+                if (label.includes('電') || String(it.unit || '').toLowerCase().includes('kwh')) {
                     totalElec += val;
                     if (it.factor > 0) detectedElecFactor = it.factor;
                 } else if (label.includes('天然氣') || label.includes('瓦斯')) {
                     totalGas += val;
                 } else if (label.includes('柴油')) {
                     totalDiesel += val;
-                } else if (label.includes('水')) {
+                } else if (label.includes('自來水') || label.includes('水資源') || label === '水') {
                     totalWater += val;
                 }
             });
