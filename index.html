@@ -590,6 +590,12 @@
                                     <p class="text-xs text-slate-500 mt-0.5">彙整全館範疇一、範疇二、範疇三排放源清冊；匯入含 Summary 工作表之 Excel 總表時自動同步顯示</p>
                                 </div>
                                 <div class="flex flex-wrap items-center gap-2">
+                                    <button id="btnResetSummary" class="bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition border border-rose-200" title="清空目前盤查清冊並重置數據為 0">
+                                        <i class="ph ph-arrow-counter-clockwise text-base"></i> 重新計算資料 RESET
+                                    </button>
+                                    <button id="btnUndoSummary" disabled class="bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold px-3 py-2 rounded-lg flex items-center gap-1.5 transition border border-amber-200 disabled:opacity-40 disabled:cursor-not-allowed" title="還原至上一次清冊異動前的狀態">
+                                        <i class="ph ph-arrow-u-up-left text-base"></i> 回上1次資料
+                                    </button>
                                     <button id="btnAddSummaryRow" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition shadow-sm">
                                         <i class="ph ph-plus-circle text-base"></i> 新增清冊排放源
                                     </button>
@@ -1126,6 +1132,7 @@
         let currentVenueId = null;
         let allInventories = [];
         let summaryItems = []; // Inventory Summary rows
+        let summaryHistoryStack = []; // History snapshots for Undo (回上1次資料)
         let elecBills = [];    // Electricity monthly ledger rows
         let gasBills = [];     // Gas monthly ledger rows
         let currentMonth = "";
@@ -2433,6 +2440,7 @@
                 }
 
                 if (importedSummaryRows.length > 0) {
+                    pushSummaryHistory();
                     summaryItems = summaryItems.filter(s => s.venueId !== currentVenueId);
                     for (const item of importedSummaryRows) {
                         item.venueId = currentVenueId;
@@ -2553,6 +2561,7 @@
                 if (importedSummaryRows.length === 0) {
                     const derived = getAutoDerivedSummaryRows();
                     if (derived.length > 0) {
+                        pushSummaryHistory();
                         summaryItems = summaryItems.filter(s => s.venueId !== currentVenueId);
                         for (const d of derived) {
                             const rowObj = {
@@ -2568,23 +2577,49 @@
                     }
                 }
 
-                // 全面同步更新所有圖表、明細表、KPI 與雲端盤查紀錄
                 renderSummaryLedger();
                 renderLedgers();
                 updateDashboardUI();
                 await saveInventoryData();
 
-                // 自動切換至「碳排儀表板與 AI 顧問」分頁，讓紅框內 KPI 卡片與明細表即時呈現
-                const dashboardTabBtn = document.querySelector('.tab-btn[data-tab="dashboard"]');
-                if (dashboardTabBtn) dashboardTabBtn.click();
-
-                showToast(`Excel 匯入並全面同步完成！${parsedSummary.join('、') || '所有面板數據已更新'}`);
+                const msg = parsedSummary.length > 0
+                    ? `Excel 匯入成功！已處理：${parsedSummary.join('、')}`
+                    : "Excel 已讀取，但未偵測到可匯入的盤查數據欄位";
+                showToast(msg, parsedSummary.length > 0 ? 'success' : 'warn');
             } catch (err) {
                 console.error("Excel import error:", err);
-                showToast("Excel 檔案解析失敗，請確認格式是否正確", "error");
+                showToast("Excel 匯入失敗：" + err.message, "error");
             } finally {
                 e.target.value = '';
             }
+        }
+
+        // Helper: 紀錄盤查清冊快照以支援「回上1次資料」
+        function updateUndoSummaryButton() {
+            const btnUndo = document.getElementById('btnUndoSummary');
+            if (!btnUndo) return;
+            const venueSnaps = summaryHistoryStack.filter(s => s.venueId === currentVenueId);
+            btnUndo.disabled = venueSnaps.length === 0;
+        }
+
+        function pushSummaryHistory() {
+            if (!currentVenueId) return;
+            const currentRows = summaryItems
+                .filter(s => s.venueId === currentVenueId)
+                .map(s => ({ ...s }));
+            summaryHistoryStack.push({
+                venueId: currentVenueId,
+                rows: currentRows,
+                engineSnapshot: {
+                    elec: els.inElectricity.value,
+                    gas: els.inGas.value,
+                    diesel: els.inDiesel.value,
+                    water: els.inWater.value,
+                    elecFactor: els.customElecFactor.value
+                }
+            });
+            if (summaryHistoryStack.length > 20) summaryHistoryStack.shift();
+            updateUndoSummaryButton();
         }
 
         // Helper: 同步清冊總表 (Summary) 數據至左側盤查引擎與全系統儀表板
@@ -2782,6 +2817,7 @@
         function loadDataForCurrentSelection() {
             if (!currentVenueId || !currentMonth) return;
             updateVenueHeaderBanner();
+            updateUndoSummaryButton();
             els.dashMonthLabel.textContent = `盤查月份: ${currentMonth}`;
 
             const docId = `${currentVenueId}_${currentMonth}`;
@@ -3257,12 +3293,80 @@
                 document.getElementById(id).addEventListener('click', () => summaryModal.classList.add('hidden'));
             });
 
+            // 1. 重新計算資料 RESET
+            document.getElementById('btnResetSummary').addEventListener('click', async () => {
+                pushSummaryHistory();
+                const oldVenueRows = summaryItems.filter(s => s.venueId === currentVenueId);
+                summaryItems = summaryItems.filter(s => s.venueId !== currentVenueId);
+                for (const row of oldVenueRows) {
+                    await removeSummaryItemFromCloud(row.id);
+                }
+
+                els.inGas.value = '';
+                els.inDiesel.value = '';
+                els.inElectricity.value = '';
+                els.inWater.value = '';
+
+                renderSummaryLedger();
+                updateDashboardUI();
+                await saveInventoryData();
+                showToast("已重新計算資料並重置盤查清冊 (RESET)");
+            });
+
+            // 2. 回上1次資料
+            document.getElementById('btnUndoSummary').addEventListener('click', async () => {
+                let lastIdx = -1;
+                for (let i = summaryHistoryStack.length - 1; i >= 0; i--) {
+                    if (summaryHistoryStack[i].venueId === currentVenueId) {
+                        lastIdx = i;
+                        break;
+                    }
+                }
+                if (lastIdx === -1) {
+                    showToast("目前沒有可還原的上一筆資料紀錄", "warn");
+                    return;
+                }
+
+                const [snapshot] = summaryHistoryStack.splice(lastIdx, 1);
+                updateUndoSummaryButton();
+
+                const currentVenueRows = summaryItems.filter(s => s.venueId === currentVenueId);
+                for (const row of currentVenueRows) {
+                    await removeSummaryItemFromCloud(row.id);
+                }
+
+                summaryItems = summaryItems.filter(s => s.venueId !== currentVenueId);
+                for (const restoredRow of snapshot.rows) {
+                    const copyRow = { ...restoredRow, venueId: currentVenueId };
+                    summaryItems.push(copyRow);
+                    await persistSummaryItem(copyRow);
+                }
+
+                if (snapshot.rows.length > 0) {
+                    syncSummaryToLeftEngine(snapshot.rows);
+                } else if (snapshot.engineSnapshot) {
+                    els.inElectricity.value = snapshot.engineSnapshot.elec ?? '';
+                    els.inGas.value = snapshot.engineSnapshot.gas ?? '';
+                    els.inDiesel.value = snapshot.engineSnapshot.diesel ?? '';
+                    els.inWater.value = snapshot.engineSnapshot.water ?? '';
+                    if (snapshot.engineSnapshot.elecFactor) {
+                        els.customElecFactor.value = snapshot.engineSnapshot.elecFactor;
+                    }
+                }
+
+                renderSummaryLedger();
+                updateDashboardUI();
+                await saveInventoryData();
+                showToast("已成功還原至上1次清冊資料");
+            });
+
             document.getElementById('btnSyncEngineToSummary').addEventListener('click', async () => {
                 const derived = getAutoDerivedSummaryRows();
                 if (derived.length === 0) {
                     showToast("左側盤查引擎尚無活動數據可供彙整", "warn");
                     return;
                 }
+                pushSummaryHistory();
                 summaryItems = summaryItems.filter(s => s.venueId !== currentVenueId);
                 for (const d of derived) {
                     const rowObj = {
@@ -3289,6 +3393,8 @@
                     showToast("請輸入排放源或能源種類名稱", "error");
                     return;
                 }
+
+                pushSummaryHistory();
 
                 const co2eTons = directTonsRaw !== '' && !isNaN(parseFloat(directTonsRaw))
                     ? parseFloat(directTonsRaw)
@@ -3327,6 +3433,7 @@
             };
 
             window.deleteSummaryRow = async (id) => {
+                pushSummaryHistory();
                 summaryItems = summaryItems.filter(s => s.id !== id);
                 await removeSummaryItemFromCloud(id);
                 const venueRows = summaryItems.filter(s => s.venueId === currentVenueId);
