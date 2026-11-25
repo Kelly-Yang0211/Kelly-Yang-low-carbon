@@ -1790,54 +1790,131 @@
                     return String(val).trim().replace(/\//g, '-');
                 };
 
-                const s1Name = wb.SheetNames.find(n => n.includes('基本資料'));
-                if (s1Name) {
-                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[s1Name], { header: 1 });
-                    const kv = {};
-                    rows.forEach(r => {
-                        if (r && r[0]) kv[String(r[0]).trim()] = r[1];
-                    });
-                    const venue = venues.find(v => v.id === currentVenueId);
-                    if (venue) {
-                        if (kv['場館名稱']) venue.name = String(kv['場館名稱']).trim();
-                        if (kv['場館地址']) venue.address = String(kv['場館地址']).trim();
-                        if (kv['統一編號']) venue.taxId = String(kv['統一編號']).trim();
-                        if (kv['代表人']) venue.representative = String(kv['代表人']).trim();
-                        if (kv['聯絡人']) venue.contactPerson = String(kv['聯絡人']).trim();
-                        if (kv['聯絡電話']) venue.phone = String(kv['聯絡電話']).trim();
-                        if (kv['聯絡傳真']) venue.fax = String(kv['聯絡傳真']).trim();
-                        if (kv['電子郵件']) venue.email = String(kv['電子郵件']).trim();
-                        if (kv['總樓地板面積 (m²)'] || kv['總樓地板面積']) venue.floorArea = Number(kv['總樓地板面積 (m²)'] || kv['總樓地板面積']) || venue.floorArea;
-                        if (kv['泳池熱源類型']) venue.poolType = String(kv['泳池熱源類型']).trim();
-
-                        await persistVenue(venue);
-                        refreshVenueDropdown();
-                        parsedSummary.push("基本資料");
+                // 0. Extract fallback venue name from filename if needed (e.g., 盤查清冊_運動中心盤查報告總表_中壢20261118V1.xlsx)
+                let fileInferredName = '';
+                if (file.name.includes('中壢')) {
+                    fileInferredName = '桃園市中壢國民運動中心';
+                } else {
+                    const cleanBase = file.name.replace(/\.(xlsx|xls)$/i, '').split('_').pop() || '';
+                    const stripped = cleanBase.replace(/\d+.*$/, '').trim();
+                    if (stripped && stripped.length >= 2) {
+                        fileInferredName = stripped.includes('運動') ? stripped : `${stripped}國民運動中心`;
                     }
                 }
 
-                const s2Name = wb.SheetNames.find(n => n.includes('能資源'));
+                // 1. Parse Sheet 1: 基本資料 (Auto-create new venue or match existing venue)
+                const s1Name = wb.SheetNames.find(n => n.includes('基本資料') || n.includes('場館'));
+                let importedVenueName = '';
+                const kv = {};
+
+                if (s1Name) {
+                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[s1Name], { header: 1 });
+                    rows.forEach(r => {
+                        if (!r) return;
+                        for (let c = 0; c < r.length - 1; c++) {
+                            const key = String(r[c] || '').replace(/[:：\s]/g, '').trim();
+                            const val = r[c + 1];
+                            if (key && val !== undefined && val !== null && String(val).trim() !== '') {
+                                kv[key] = val;
+                            }
+                        }
+                    });
+                    importedVenueName = String(
+                        kv['場館名稱'] || kv['受查場館名稱'] || kv['受查單位名稱'] || kv['單位名稱'] || kv['機構名稱'] || ''
+                    ).trim();
+                }
+
+                const resolvedVenueName = importedVenueName || fileInferredName;
+                let targetVenue = null;
+
+                if (resolvedVenueName) {
+                    // Check if a venue with this name already exists (exact or partial core match)
+                    const coreKeyword = resolvedVenueName.replace(/(桃園市|新北市|台北市|臺中市|高雄市|國民運動中心|全民運動館|運動中心)/g, '').trim();
+                    targetVenue = venues.find(v =>
+                        v.name === resolvedVenueName ||
+                        (coreKeyword.length >= 2 && v.name.includes(coreKeyword))
+                    );
+
+                    if (!targetVenue) {
+                        // Automatically create a brand new venue record!
+                        targetVenue = {
+                            id: 'venue_' + Date.now(),
+                            name: resolvedVenueName,
+                            address: '',
+                            taxId: '',
+                            representative: '',
+                            contactPerson: '',
+                            phone: '',
+                            fax: '',
+                            email: '',
+                            floorArea: 12000,
+                            poolType: '溫水泳池(熱泵+天然氣輔助)'
+                        };
+                        venues.push(targetVenue);
+                        parsedSummary.push(`自動新增場館「${resolvedVenueName}」`);
+                    } else {
+                        parsedSummary.push(`更新場館「${targetVenue.name}」基本資料`);
+                    }
+                    currentVenueId = targetVenue.id;
+                } else {
+                    targetVenue = venues.find(v => v.id === currentVenueId);
+                    if (targetVenue) parsedSummary.push("基本資料");
+                }
+
+                if (targetVenue && Object.keys(kv).length > 0) {
+                    if (importedVenueName) targetVenue.name = importedVenueName;
+                    if (kv['場館地址'] || kv['地址']) targetVenue.address = String(kv['場館地址'] || kv['地址']).trim();
+                    if (kv['統一編號'] || kv['統編']) targetVenue.taxId = String(kv['統一編號'] || kv['統編']).trim();
+                    if (kv['代表人'] || kv['負責人']) targetVenue.representative = String(kv['代表人'] || kv['負責人']).trim();
+                    if (kv['聯絡人'] || kv['盤查聯絡人'] || kv['承辦人']) targetVenue.contactPerson = String(kv['聯絡人'] || kv['盤查聯絡人'] || kv['承辦人']).trim();
+                    if (kv['聯絡電話'] || kv['電話']) targetVenue.phone = String(kv['聯絡電話'] || kv['電話']).trim();
+                    if (kv['聯絡傳真'] || kv['傳真']) targetVenue.fax = String(kv['聯絡傳真'] || kv['傳真']).trim();
+                    if (kv['電子郵件'] || kv['Email'] || kv['EMAIL']) targetVenue.email = String(kv['電子郵件'] || kv['Email'] || kv['EMAIL']).trim();
+                    const areaVal = kv['總樓地板面積(m²)'] || kv['總樓地板面積'] || kv['樓地板面積'] || kv['面積'];
+                    if (areaVal) targetVenue.floorArea = Number(String(areaVal).replace(/,/g, '')) || targetVenue.floorArea;
+                    if (kv['泳池熱源類型'] || kv['泳池類型'] || kv['加熱方式']) {
+                        targetVenue.poolType = String(kv['泳池熱源類型'] || kv['泳池類型'] || kv['加熱方式']).trim();
+                    }
+                }
+
+                if (targetVenue) {
+                    await persistVenue(targetVenue);
+                    refreshVenueDropdown();
+                }
+
+                // 2. Parse Sheet 2: 能資源碳排放統計 / 盤查清冊 / 總表
+                const s2Name = wb.SheetNames.find(n => n.includes('能資源') || n.includes('盤查') || n.includes('總表') || n.includes('統計'));
                 if (s2Name) {
                     const rows = XLSX.utils.sheet_to_json(wb.Sheets[s2Name], { header: 1 });
                     rows.forEach(r => {
-                        const rowStr = (r || []).join(' ');
-                        const val = parseFloat(r[2]);
+                        if (!r || r.length === 0) return;
+                        const rowStr = r.join(' ');
+                        // Find the first numeric activity value in the row
+                        let val = NaN;
+                        for (let c = 1; c < r.length; c++) {
+                            const candidate = parseFloat(String(r[c]).replace(/,/g, ''));
+                            if (!isNaN(candidate) && candidate >= 0 && typeof r[c] !== 'boolean') {
+                                val = candidate;
+                                break;
+                            }
+                        }
                         if (!isNaN(val) && val >= 0) {
-                            if (rowStr.includes('天然氣')) els.inGas.value = val;
+                            if (rowStr.includes('天然氣') || rowStr.includes('瓦斯')) els.inGas.value = val;
                             else if (rowStr.includes('柴油')) els.inDiesel.value = val;
-                            else if (rowStr.includes('電力')) els.inElectricity.value = val;
-                            else if (rowStr.includes('自來水')) els.inWater.value = val;
+                            else if (rowStr.includes('外購電力') || rowStr.includes('電力') || rowStr.includes('用電')) els.inElectricity.value = val;
+                            else if (rowStr.includes('自來水') || rowStr.includes('用水')) els.inWater.value = val;
                         }
                     });
                     parsedSummary.push("能資源數據");
                 }
 
+                // 3. Parse Sheet 3: 電費月記錄
                 const s3Name = wb.SheetNames.find(n => n.includes('電費'));
                 if (s3Name) {
                     const rows = XLSX.utils.sheet_to_json(wb.Sheets[s3Name]);
                     let importedElecCount = 0;
                     for (const r of rows) {
-                        const usage = parseFloat(r['用電度數(kWh)'] || r['用電度數'] || 0);
+                        const usage = parseFloat(r['用電度數(kWh)'] || r['用電度數'] || r['總用電度數'] || 0);
                         if (usage > 0 || r['帳單月份']) {
                             const bill = {
                                 id: 'elec_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
@@ -1864,12 +1941,13 @@
                     if (importedElecCount > 0) parsedSummary.push(`${importedElecCount}筆電費帳單`);
                 }
 
-                const s4Name = wb.SheetNames.find(n => n.includes('瓦斯'));
+                // 4. Parse Sheet 4: 瓦斯月記錄
+                const s4Name = wb.SheetNames.find(n => n.includes('瓦斯') || n.includes('天然氣'));
                 if (s4Name) {
                     const rows = XLSX.utils.sheet_to_json(wb.Sheets[s4Name]);
                     let importedGasCount = 0;
                     for (const r of rows) {
-                        const usage = parseFloat(r['用氣度數(m³)'] || r['用氣度數'] || 0);
+                        const usage = parseFloat(r['用氣度數(m³)'] || r['用氣度數'] || r['天然氣度數'] || 0);
                         if (usage > 0 || r['帳單月份']) {
                             const bill = {
                                 id: 'gas_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
